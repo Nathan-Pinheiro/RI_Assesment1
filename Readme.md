@@ -1,23 +1,6 @@
-# ri_a1 — ROS 2 + Webots Project
+# Robotic Intelligents - Assesment 1
 
-ROS 2 (ament_python) project for simulating and controlling a swarm of e-puck robots in Webots.
-The `ri_a1` package contains the robot controller plugin, the launch file, the URDF model and the Webots world.
-
----
-
-## Requirements
-
-- **Ubuntu** 22.04 or 24.04
-- **ROS 2** Jazzy (adjust `$ROS_DISTRO` if you use another distro)
-- **Webots** (R2023b recommended with `webots_ros2`; R2025a may work but is not officially supported)
-- `webots_ros2` :
-  ```bash
-  sudo apt install ros-$ROS_DISTRO-webots-ros2
-  ```
-- `colcon` :
-  ```bash
-  sudo apt install python3-colcon-common-extensions
-  ```
+The objective of this Assesment is to make a simulation containing 5 bots, with a single reactive controller.
 
 ---
 
@@ -25,24 +8,23 @@ The `ri_a1` package contains the robot controller plugin, the launch file, the U
 
 ```
 ri_a1/
-├── commands/
-│   ├── build.sh                # Build only
-│   ├── run.sh                  # Run only
-│   └── build_and_run.sh        # Build then run
-├── launch/
-│   └── launch.py               # Main launch file (Webots + 5 controllers)
-├── ri_a1/                      # Python package
+├── commands/                   # Here are the commands to build/run.
+│   ├── build.sh
+│   ├── run.sh
+│   └── build_and_run.sh
+├── launch/                     # Contains file for launching
+│   └── launch.py
+├── ri_a1/                      # Here are all the python files
 │   ├── __init__.py
-│   └── controller.py           # Webots plugin controlling each e-puck
+│   └── controller.py           # The unique reactive controller for all bots
 ├── resource/
-│   ├── ri_a1                   # Ament marker
+│   ├── ri_a1
 │   └── robot.urdf              # Robot URDF description
 ├── worlds/
-│   └── world.wbt               # Webots world (5 e-pucks, extern controllers)
+│   └── world.wbt               # The world, flat with 5 bots
 ├── package.xml
 ├── setup.py
 ├── setup.cfg
-├── LICENSE
 └── README.md
 ```
 
@@ -145,39 +127,3 @@ wait
 ```
 
 ---
-
-## Development
-
-- Python controller: `ri_a1/controller.py` (Webots plugin, called by `webots_ros2_driver`)
-- Webots world: `worlds/world.wbt`
-- URDF: `resource/robot.urdf`
-- Launch: `launch/launch.py`
-
-Because the build uses `--symlink-install`, changes to Python files, launch files, and world files are picked up without rebuilding.
-You only need to rebuild when modifying `package.xml`, `setup.py`, `entry_points`, or adding new files:
-
-```bash
-cd ~/ros2_ws
-colcon build --packages-select ri_a1 --symlink-install
-source install/setup.bash
-```
-
----
-
-## Notes on the Webots plugin
-
-`controller.py` is **not** a standalone ROS 2 node — it is a plugin loaded by `webots_ros2_driver` via the `<plugin>` tag in `robot.urdf`:
-
-```xml
-<webots>
-  <plugin type="ri_a1.controller.Controller" />
-</webots>
-```
-
-The driver instantiates one `Controller` per robot declared in the world. That is why `ros2 run ri_a1 controller` is not applicable — the plugin runs inside the Webots controller process started by the launch file.
-
----
-
-## License
-
-See the [LICENSE](LICENSE) file.
