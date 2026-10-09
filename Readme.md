@@ -7,7 +7,7 @@ The objective of this Assesment is to make a simulation containing 5 bots, with 
 ## Project structure
 
 ```
-ri_a1/
+RI_Assesment1/
 ├── commands/                   # Here are the commands to build/run.
 │   ├── build.sh
 │   ├── run.sh
@@ -67,10 +67,10 @@ Three scripts are provided in `commands/` to simplify the workflow.
 Make them executable once:
 
 ```bash
-chmod +x ~/ros2_ws/src/ri_a1/commands/*.sh
+chmod +x ~/ros2_ws/src/RI_Assesment1/commands/*.sh
 ```
 
-Then, from the repo root (`ri_a1/`):
+Then, from the repo root (`RI_Assesment1/`):
 
 ```bash
 ./commands/build.sh          # Build only
