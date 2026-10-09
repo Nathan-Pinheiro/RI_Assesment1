@@ -80,6 +80,17 @@ Then, from the repo root (`RI_Assesment1/`):
 
 Each script automatically locates the workspace root, so it can be called from anywhere.
 
+
+## Use your GPU
+
+by default, the webot use the CPU, which is bad. This script will make it use the GPU
+
+```bash
+cd ~/ros2_ws/src/RI_Assesment1
+chmod +x commands/*.sh
+./commands/setup_gpu.sh
+```
+
 ---
 
 ## Check that the nodes are running
