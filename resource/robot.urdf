@@ -1,6 +1,61 @@
 <?xml version="1.0" ?>
-<robot name="e-puck">
+<robot name="ri_a1_robot">
+    <link name="base_link"/>
+    <link name="left_wheel"/>
+    <link name="right_wheel"/>
+
+    <joint name="left wheel motor" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel"/>
+        <origin xyz="0 0.026 0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <joint name="right wheel motor" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel"/>
+        <origin xyz="0 -0.026 0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
     <webots>
-        <plugin type="ri_a1.controller.Controller" />
+        <device reference="ps0" type="DistanceSensor">
+            <ros><topicName>ps0</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps1" type="DistanceSensor">
+            <ros><topicName>ps1</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps2" type="DistanceSensor">
+            <ros><topicName>ps2</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps3" type="DistanceSensor">
+            <ros><topicName>ps3</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps4" type="DistanceSensor">
+            <ros><topicName>ps4</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps5" type="DistanceSensor">
+            <ros><topicName>ps5</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps6" type="DistanceSensor">
+            <ros><topicName>ps6</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+        <device reference="ps7" type="DistanceSensor">
+            <ros><topicName>ps7</topicName><enabled>true</enabled><alwaysOn>true</alwaysOn></ros>
+        </device>
+
+        <plugin type="webots_ros2_control::Ros2Control" />
     </webots>
+
+    <ros2_control name="WebotsControl" type="system">
+        <hardware><plugin>webots_ros2_control::Ros2ControlSystem</plugin></hardware>
+        <joint name="right wheel motor">
+            <state_interface name="position"/>
+            <command_interface name="velocity"/>
+        </joint>
+        <joint name="left wheel motor">
+            <state_interface name="position"/>
+            <command_interface name="velocity"/>
+        </joint>
+    </ros2_control>
 </robot>

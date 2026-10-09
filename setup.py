@@ -1,5 +1,6 @@
-import os
 from glob import glob
+import os
+
 from setuptools import find_packages, setup
 
 package_name = 'ri_a1'
@@ -13,7 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.wbt')),
-        (os.path.join('share', package_name, 'resource'), glob('resource/*.urdf')),
+        (os.path.join('share', package_name, 'resource'), glob('resource/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,6 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'controller = ri_a1.controller:main',
         ],
     },
 )
