@@ -14,10 +14,25 @@ if ! command -v powershell.exe >/dev/null 2>&1; then
 fi
 echo "[1/4] WSL2 détecté"
 
-# --- 2. Détection du GPU Windows ---
-GPU_NAME=$(powershell.exe -NoProfile -Command \
-    "(Get-CimInstance Win32_VideoController | Where-Object { \$_.Name -notmatch 'Basic|Microsoft|Remote' } | Select-Object -First 1).Name" \
+# --- 2. Détection du GPU Windows (préfère le GPU dédié) ---
+GPU_LIST=$(powershell.exe -NoProfile -Command \
+    "Get-CimInstance Win32_VideoController | Where-Object { \$_.Name -notmatch 'Basic|Microsoft|Remote' } | Select-Object -ExpandProperty Name" \
     2>/dev/null | tr -d '\r')
+
+# Priorité : NVIDIA > AMD RX > Intel Arc > premier trouvé
+GPU_NAME=""
+for pattern in "NVIDIA|GeForce|RTX|Quadro|Tesla" "Radeon RX" "Intel.*Arc"; do
+    match=$(echo "$GPU_LIST" | grep -iE "$pattern" | head -1)
+    if [ -n "$match" ]; then
+        GPU_NAME="$match"
+        break
+    fi
+done
+
+# Fallback : premier de la liste
+if [ -z "$GPU_NAME" ]; then
+    GPU_NAME=$(echo "$GPU_LIST" | head -1)
+fi
 
 if [ -z "$GPU_NAME" ]; then
     echo "[2/4] Aucun GPU détecté — fallback sur 'auto'"
