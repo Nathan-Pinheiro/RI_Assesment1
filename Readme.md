@@ -37,7 +37,7 @@ RI_Assesment1/
 ```bash
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
-git clone <repo-url> ri_a1
+git clone <repo-url> RI_Assesment1
 ```
 
 ### 2. Build
