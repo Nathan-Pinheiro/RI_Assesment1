@@ -9,7 +9,13 @@
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>ament_index_python</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>controller_manager</depend>
   <depend>webots_ros2_driver</depend>
+  <depend>webots_ros2_control</depend>
 
   <test_depend>python3-pytest</test_depend>
 

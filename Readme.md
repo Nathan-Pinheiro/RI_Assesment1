@@ -35,8 +35,9 @@ ri_a1/
 │   ├── __init__.py
 │   └── controller.py           # Webots plugin controlling each e-puck
 ├── resource/
-│   ├── ri_a1                   # Ament marker
-│   └── robot.urdf              # Robot URDF description
+│   ├── ri_a1
+│   ├── robot.urdf              # Robot URDF description
+│   └── robot.yml               # ros2_control parameters
 ├── worlds/
 │   └── world.wbt               # Webots world (5 e-pucks, extern controllers)
 ├── package.xml
@@ -133,13 +134,13 @@ Topics:
 ros2 topic echo /epuck_1/cmd_vel
 
 # Drive one robot forward
-ros2 topic pub -r 10 /epuck_1/cmd_vel geometry_msgs/msg/Twist \
-  "{linear: {x: 0.05}, angular: {z: 0.0}}"
+ros2 topic pub -r 10 /epuck_1/cmd_vel geometry_msgs/msg/TwistStamped \
+  "{twist: {linear: {x: 0.05}, angular: {z: 0.0}}}"
 
 # Make every robot spin on the spot
 for i in 1 2 3 4 5; do
-  ros2 topic pub -r 10 /epuck_$i/cmd_vel geometry_msgs/msg/Twist \
-    "{linear: {x: 0.0}, angular: {z: 1.0}}" &
+  ros2 topic pub -r 10 /epuck_$i/cmd_vel geometry_msgs/msg/TwistStamped \
+    "{twist: {linear: {x: 0.0}, angular: {z: 1.0}}}" &
 done
 wait
 ```
