@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>my_package</name>
+  <name>ri_a1</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="nathan@todo.todo">nathan</maintainer>
@@ -11,9 +11,6 @@
   <depend>geometry_msgs</depend>
   <depend>webots_ros2_driver</depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>

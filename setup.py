@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'my_package'
+package_name = 'ri_a1'
 
 setup(
     name=package_name,
@@ -28,7 +28,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'my_robot_driver = my_package.my_robot_driver:main'
         ],
     },
 )

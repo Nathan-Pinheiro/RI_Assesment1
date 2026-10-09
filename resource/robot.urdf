@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <robot name="e-puck">
     <webots>
-        <plugin type="my_package.my_robot_driver.MyRobotDriver" />
+        <plugin type="ri_a1.controller.Controller" />
     </webots>
 </robot>
