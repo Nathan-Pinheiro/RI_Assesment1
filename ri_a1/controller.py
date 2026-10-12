@@ -7,7 +7,7 @@ class MyRobotDriver:
 
     SENSOR_ANGLES_DEG = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
 
-    SEED = 43
+    SEED = 42
 
     SEUIL = 50
 
@@ -43,17 +43,6 @@ class MyRobotDriver:
             except ValueError:
                 robot_index = 0
         random.seed(self.SEED + robot_index)
-
-        angle = random.uniform(0.0, 2.0 * math.pi)
-        try:
-            self_node = self.__robot.getSelf()
-            if self_node is not None:
-                self_node.getField('rotation').setSFRotation([0, 0, 1, angle])
-                print(f'[{self.__name}] angle = {angle:.2f} rad',
-                      file=sys.stderr, flush=True)
-        except Exception as e:
-            print(f'[{self.__name}] erreur rotation: {e}',
-                  file=sys.stderr, flush=True)
 
         self.__left_motor = self.__robot.getDevice('left wheel motor')
         self.__right_motor = self.__robot.getDevice('right wheel motor')
