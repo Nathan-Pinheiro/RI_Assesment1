@@ -1,0 +1,88 @@
+#VRML_SIM R2025a utf8
+
+PROTO TricycleRobot [
+  field SFVec3f    translation  0 0 0.021
+  field SFRotation rotation     0 0 1 0
+  field SFString   name         "robot"
+  field SFColor    color        1 0 0
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    controller "<extern>"
+    supervisor TRUE
+    children [
+      Shape {
+        appearance Appearance {
+          material Material { diffuseColor IS color }
+        }
+        geometry Box { size 0.08 0.06 0.03 }
+      }
+
+      HingeJoint {
+        jointParameters HingeJointParameters { axis 0 1 0 anchor 0 0.035 0 }
+        device [ RotationalMotor { name "left wheel motor" maxVelocity 20 maxTorque 1.0 } ]
+        endPoint Solid {
+          translation 0 0.035 0
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance Appearance { material Material { diffuseColor 0.1 0.1 0.1 } }
+              geometry Cylinder { radius 0.02 height 0.008 }
+            }
+          ]
+          name "left wheel"
+          boundingObject Cylinder { radius 0.02 height 0.008 }
+          physics Physics {}
+        }
+      }
+
+      HingeJoint {
+        jointParameters HingeJointParameters { axis 0 1 0 anchor 0 -0.035 0 }
+        device [ RotationalMotor { name "right wheel motor" maxVelocity 20 maxTorque 1.0 } ]
+        endPoint Solid {
+          translation 0 -0.035 0
+          rotation 1 0 0 1.5708
+          children [
+            Shape {
+              appearance Appearance { material Material { diffuseColor 0.1 0.1 0.1 } }
+              geometry Cylinder { radius 0.02 height 0.008 }
+            }
+          ]
+          name "right wheel"
+          boundingObject Cylinder { radius 0.02 height 0.008 }
+          physics Physics {}
+        }
+      }
+
+      Solid {
+        translation 0.035 0 -0.011
+        name "front caster"
+        children [
+          Shape {
+            appearance Appearance { material Material { diffuseColor 0.3 0.3 0.3 } }
+            geometry Sphere { radius 0.01 }
+          }
+        ]
+        boundingObject Sphere { radius 0.01 }
+        physics Physics { density -1 mass 0.005 }
+      }
+
+      DistanceSensor { translation 0.0334 -0.0398 0 rotation 0 0 1 -0.873 name "ds_0"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0398 -0.0334 0 rotation 0 0 1 -0.698 name "ds_1"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0450 -0.0260 0 rotation 0 0 1 -0.524 name "ds_2"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0489 -0.0178 0 rotation 0 0 1 -0.349 name "ds_3"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0512 -0.0090 0 rotation 0 0 1 -0.174 name "ds_4"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0520  0.0000 0 rotation 0 0 1  0.000 name "ds_5"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0512  0.0090 0 rotation 0 0 1  0.174 name "ds_6"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0489  0.0178 0 rotation 0 0 1  0.349 name "ds_7"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0450  0.0260 0 rotation 0 0 1  0.524 name "ds_8"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0398  0.0334 0 rotation 0 0 1  0.698 name "ds_9"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+      DistanceSensor { translation 0.0334  0.0398 0 rotation 0 0 1  0.873 name "ds_10" type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
+    ]
+    boundingObject Box { size 0.08 0.06 0.03 }
+    physics Physics {}
+  }
+}

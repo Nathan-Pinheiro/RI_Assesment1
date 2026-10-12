@@ -1,102 +1,132 @@
-from geometry_msgs.msg import TwistStamped
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Range
+import sys
+import math
+import random
 
 
-class MonControleur(Node):
-    def __init__(self):
-        super().__init__('ri_a1_controller')
+class MyRobotDriver:
 
-        # --- Récupération du nom du robot (passé par le launch file) ---
-        self.declare_parameter('robot_name', 'epuck_1')
-        self.robot_name = self.get_parameter('robot_name').get_parameter_value().string_value
+    SENSOR_ANGLES_DEG = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
 
-        self.get_logger().info(f'🤖 Contrôleur initialisé pour {self.robot_name}')
+    SEED = 43
 
-        # --- Abonnement aux capteurs avec namespace ---
-        self.distances = [0.0] * 8
-        for i in range(8):
-            self.create_subscription(
-                Range, f'/{self.robot_name}/ps{i}',
-                lambda msg, idx=i: self._range_callback(msg, idx),
-                10
-            )
+    SEUIL = 50
 
-        # --- Publication des commandes moteurs avec namespace ---
-        self.cmd_pub = self.create_publisher(
-            TwistStamped, f'/{self.robot_name}/cmd_vel', 10
-        )
+    DIST_STOP = 0.1
+    DIST_SLOW = 0.5
 
-        # --- Timer de décision ---
-        self.create_timer(0.1, self._decide)
-        self.last_log_time = 0.0
+    MAX_SPEED = 5.0
+    MIN_SPEED = 1.0
+    TURN_GAIN = 2.5
+    CRUISE_L = 4.0
+    CRUISE_R = 3.5
 
-        # --- Paramètres de comportement (à ajuster) ---
-        self.DETECTION_THRESHOLD = 300.0   # mm : distance à laquelle on "voit" un robot
-        self.DANGER_THRESHOLD = 100.0      # mm : trop près, on s'arrête
-        self.CRUISE_SPEED = 0.06           # m/s : vitesse de suivi
-        self.SEARCH_SPEED = 0.03           # m/s : vitesse en mode recherche
-        self.SEARCH_TURN = 0.6             # rad/s : rotation en mode recherche
-        self.ALIGN_GAIN = 0.005            # gain de la correction angulaire
+    REVERSE_TURN = False
 
-    def _range_callback(self, msg, idx):
-        self.distances[idx] = msg.range * 1000  # convertir en mm
+    LOOKUP = [
+        (0.0,  1024),
+        (0.05, 1000),
+        (0.5,  800),
+        (1.0,  600),
+        (2.0,  300),
+        (3.0,  120),
+        (4.0,  0),
+    ]
 
-    def _decide(self):
-        cmd = TwistStamped()
-        cmd.header.stamp = self.get_clock().now().to_msg()
+    def init(self, webots_node, properties):
+        self.__robot = webots_node.robot
+        self.__name = self.__robot.getName()
 
-        # Capteurs avant gauche (0) et avant droit (7) de l'e-puck
-        front_left = self._distance(0)
-        front_right = self._distance(7)
-        closest_front = min(front_left, front_right)
+        robot_index = 0
+        if '_' in self.__name:
+            try:
+                robot_index = int(self.__name.rsplit('_', 1)[1])
+            except ValueError:
+                robot_index = 0
+        random.seed(self.SEED + robot_index)
 
-        if closest_front < self.DETECTION_THRESHOLD:
-            # ---------- MODE SUIVI ----------
-            if closest_front < self.DANGER_THRESHOLD:
-                # Trop près : on recule légèrement pour garder de la distance
-                cmd.twist.linear.x = -0.02
-                cmd.twist.angular.z = 0.0
-                self._log_throttled(f'⚠️ [{self.robot_name}] Trop près, je recule.')
+        angle = random.uniform(0.0, 2.0 * math.pi)
+        try:
+            self_node = self.__robot.getSelf()
+            if self_node is not None:
+                self_node.getField('rotation').setSFRotation([0, 0, 1, angle])
+                print(f'[{self.__name}] angle = {angle:.2f} rad',
+                      file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f'[{self.__name}] erreur rotation: {e}',
+                  file=sys.stderr, flush=True)
+
+        self.__left_motor = self.__robot.getDevice('left wheel motor')
+        self.__right_motor = self.__robot.getDevice('right wheel motor')
+        self.__left_motor.setPosition(float('inf'))
+        self.__right_motor.setPosition(float('inf'))
+        self.__left_motor.setVelocity(0.0)
+        self.__right_motor.setVelocity(0.0)
+
+        self.__sensors = []
+        for i in range(11):
+            s = self.__robot.getDevice(f'ds_{i}')
+            if s is None:
+                print(f'[{self.__name}] ds_{i} INTROUVABLE',
+                      file=sys.stderr, flush=True)
             else:
-                # Suivi : avancer + s'aligner sur le robot devant
-                cmd.twist.linear.x = self.CRUISE_SPEED
-                # Correction : si le robot est plus à droite, on tourne à droite
-                error = front_right - front_left
-                cmd.twist.angular.z = error * self.ALIGN_GAIN
-                self._log_throttled(f'👣 [{self.robot_name}] Je suis un robot.')
+                s.enable(32)
+                self.__sensors.append(s)
+
+        self.__sin_angles = [
+            math.sin(math.radians(a)) for a in self.SENSOR_ANGLES_DEG
+        ]
+
+        print(f'[{self.__name}] init OK ({len(self.__sensors)} capteurs)',
+              file=sys.stderr, flush=True)
+
+    def __set(self, l, r):
+        self.__left_motor.setVelocity(l)
+        self.__right_motor.setVelocity(r)
+
+    def __reading_to_distance(self, v):
+        if v <= 0:
+            return 4.0
+        for i in range(len(self.LOOKUP) - 1):
+            d1, v1 = self.LOOKUP[i]
+            d2, v2 = self.LOOKUP[i + 1]
+            if v1 >= v >= v2:
+                if v1 == v2:
+                    return d1
+                t = (v1 - v) / (v1 - v2)
+                return d1 + t * (d2 - d1)
+        return 4.0
+
+    def step(self):
+        d = [s.getValue() for s in self.__sensors]
+        max_d = max(d) if d else 0
+
+        if max_d < self.SEUIL:
+            self.__set(self.CRUISE_L, self.CRUISE_R)
+            return
+
+        dist = self.__reading_to_distance(max_d)
+
+        if dist <= self.DIST_STOP:
+            self.__set(0.0, 0.0)
+            return
+        elif dist < self.DIST_SLOW:
+            t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
+            speed = self.MAX_SPEED * t
+            speed = max(speed, self.MIN_SPEED * 0.3)
         else:
-            # ---------- MODE RECHERCHE ----------
-            cmd.twist.linear.x = self.SEARCH_SPEED
-            cmd.twist.angular.z = self.SEARCH_TURN
-            self._log_throttled(f'🔍 [{self.robot_name}] Je cherche un robot.')
+            speed = self.MAX_SPEED
 
-        self.cmd_pub.publish(cmd)
+        turn = 0.0
+        for i, di in enumerate(d):
+            if di > self.SEUIL:
+                turn += (di / 1024.0) * self.__sin_angles[i]
+        turn = max(-1.0, min(1.0, turn))
 
-    def _distance(self, index):
-        distance = self.distances[index]
-        # Webots renvoie parfois 0.0 quand rien n'est détecté -> on met une grande valeur
-        return distance if distance > 0.0 else 1000.0
+        diff = self.TURN_GAIN * turn * speed
+        if self.REVERSE_TURN:
+            diff = -diff
 
-    def _log_throttled(self, message):
-        now = self.get_clock().now().nanoseconds / 1e9
-        if now - self.last_log_time >= 2.0:
-            self.get_logger().info(message)
-            self.last_log_time = now
+        left  = max(0.0, min(self.MAX_SPEED, speed - diff))
+        right = max(0.0, min(self.MAX_SPEED, speed + diff))
 
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = MonControleur()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
+        self.__set(left, right)
