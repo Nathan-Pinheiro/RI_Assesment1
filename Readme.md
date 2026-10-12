@@ -112,6 +112,28 @@ chmod +x commands/*.sh
 
 ---
 
+## Per-robot tuning
+
+Cruise behaviour (when no obstacle is detected) is set in `config/config.yaml`:
+
+- `robot:` holds the defaults shared by every robot.
+- `robots:` is optional and keyed by robot name (`robot_0` … `robot_4`). Only the keys listed there override the defaults.
+
+```yaml
+robot:
+  cruise_speed: 3.75       # mean wheel speed (rad/s)
+  cruise_curvature: 0.0667 # (L-R)/(L+R): >0 curves right, <0 curves left, 0 = straight
+
+robots:
+  robot_1: { cruise_speed: 3.0, cruise_curvature: 0.10 }
+```
+
+Wheel speeds are `L = speed·(1+curvature)` and `R = speed·(1−curvature)`, capped at `max_speed`.
+Each robot draws its path on the floor with a pen in its own colour (`trail: true` in `robot:`, or per robot in `robots:`; set `false` to disable). Ink never evaporates, so restart the simulation to clear it.
+The legacy `cruise_l` / `cruise_r` pair is still accepted and converted. Each robot logs its effective values at start (`init OK ... speed=... curvature=...`).
+
+---
+
 ## Check that the nodes are running
 
 In a second terminal:

@@ -7,11 +7,11 @@ seed: 44
 # 46 => 1 groupe valide !
 
 spawn:
-  spawn_zone_x_min: -1.2
-  spawn_zone_x_max:  1.2
-  spawn_zone_y_min: -1.2
-  spawn_zone_y_max:  1.2
-  min_robot_distance: 0.25
+  spawn_zone_x_min: -4.0
+  spawn_zone_x_max:  4.0
+  spawn_zone_y_min: -4.0
+  spawn_zone_y_max:  4.0
+  min_robot_distance: 2.0
   max_placement_attempts: 1000
 
 robot:
@@ -21,8 +21,10 @@ robot:
   max_speed: 5.0
   min_speed: 1.0
   turn_gain: 1.5
-  cruise_l: 4.0
-  cruise_r: 3.5
+  # Vitesse moyenne des roues en ligne libre (rad/s)
+  cruise_speed: 3.75
+  # Courbure de base, (L-R)/(L+R) : >0 = tourne à droite, <0 = à gauche, 0 = droit
+  cruise_curvature: 0.0667
   reverse_turn: false
   sensor_angles_deg: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
   lookup:
@@ -33,3 +35,12 @@ robot:
     - [2.0,  300]
     - [3.0,  120]
     - [4.0,  0]
+
+# Surcharges par robot (optionnel). Seules les clés listées sont remplacées ;
+# les robots absents utilisent les valeurs de robot: ci-dessus.
+robots:
+  robot_0: { cruise_speed: 10.0, cruise_curvature:  0.00 }
+  robot_1: { cruise_speed: 8.0, cruise_curvature:  0.50 }
+  robot_2: { cruise_speed: 4.0, cruise_curvature: -0.30 }
+  robot_3: { cruise_speed: 2.5, cruise_curvature:  0.10 }
+  robot_4: { cruise_speed: 2.5, cruise_curvature: -0.60 }

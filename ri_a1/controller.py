@@ -13,8 +13,8 @@ DEFAULTS = {
     'max_speed': 5.0,
     'min_speed': 1.0,
     'turn_gain': 2.5,
-    'cruise_l': 4.0,
-    'cruise_r': 3.5,
+    'cruise_speed': 3.75,
+    'cruise_curvature': 0.5 / 7.5,
     'reverse_turn': False,
     'sensor_angles_deg': [-50, -40, -30, -20, -10, 0,
                           10, 20, 30, 40, 50],
@@ -30,15 +30,49 @@ DEFAULTS = {
 }
 
 
+def _normalize_layer(layer, label):
+    """Convert legacy cruise_l/cruise_r in a config layer to speed/curvature."""
+    layer = dict(layer or {})
+    left = layer.pop('cruise_l', None)
+    right = layer.pop('cruise_r', None)
+    if left is None and right is None:
+        return layer
+    if left is None or right is None:
+        print(f'[config] {label}: cruise_l et cruise_r doivent aller '
+              f'ensemble, ignorés', file=sys.stderr, flush=True)
+        return layer
+    total = float(left) + float(right)
+    layer.setdefault('cruise_speed', total / 2.0)
+    layer.setdefault('cruise_curvature',
+                     (float(left) - float(right)) / total if total else 0.0)
+    return layer
+
+
+def build_robot_config(cfg_full, name):
+    """DEFAULTS < robot: < robots[name]."""
+    cfg = dict(DEFAULTS)
+    per_robot = (cfg_full.get('robots') or {}).get(name)
+    if per_robot is None and cfg_full.get('robots'):
+        print(f'[{name}] pas de section dans robots:, valeurs par défaut',
+              file=sys.stderr, flush=True)
+    for label, layer in (('robot', cfg_full.get('robot')),
+                         (f'robots.{name}', per_robot)):
+        layer = _normalize_layer(layer, label)
+        unknown = set(layer) - set(DEFAULTS)
+        if unknown:
+            print(f'[config] {label}: clés inconnues {sorted(unknown)}',
+                  file=sys.stderr, flush=True)
+        cfg.update(layer)
+    return cfg
+
+
 class MyRobotDriver:
 
     def init(self, webots_node, properties):
         self.__robot = webots_node.robot
         self.__name = self.__robot.getName()
 
-        cfg_full = load_config()
-        cfg = dict(DEFAULTS)
-        cfg.update(cfg_full.get('robot', {}))
+        cfg = build_robot_config(load_config(), self.__name)
 
         self.SEED              = int(cfg['seed'])
         self.SEUIL             = int(cfg['seuil'])
@@ -47,8 +81,12 @@ class MyRobotDriver:
         self.MAX_SPEED         = float(cfg['max_speed'])
         self.MIN_SPEED         = float(cfg['min_speed'])
         self.TURN_GAIN         = float(cfg['turn_gain'])
-        self.CRUISE_L          = float(cfg['cruise_l'])
-        self.CRUISE_R          = float(cfg['cruise_r'])
+        self.CRUISE_SPEED      = float(cfg['cruise_speed'])
+        self.CRUISE_CURVATURE  = float(cfg['cruise_curvature'])
+        self.CRUISE_L = min(self.MAX_SPEED,
+                            self.CRUISE_SPEED * (1.0 + self.CRUISE_CURVATURE))
+        self.CRUISE_R = min(self.MAX_SPEED,
+                            self.CRUISE_SPEED * (1.0 - self.CRUISE_CURVATURE))
         self.REVERSE_TURN      = bool(cfg['reverse_turn'])
         self.SENSOR_ANGLES_DEG = list(cfg['sensor_angles_deg'])
         self.LOOKUP            = [tuple(p) for p in cfg['lookup']]
@@ -84,7 +122,10 @@ class MyRobotDriver:
         ]
 
         print(f'[{self.__name}] init OK '
-              f'({len(self.__sensors)} capteurs, seuil={self.SEUIL})',
+              f'({len(self.__sensors)} capteurs, seuil={self.SEUIL}, '
+              f'speed={self.CRUISE_SPEED:.2f}, '
+              f'curvature={self.CRUISE_CURVATURE:+.3f}, '
+              f'L={self.CRUISE_L:.2f}, R={self.CRUISE_R:.2f})',
               file=sys.stderr, flush=True)
 
     def __set(self, l, r):
