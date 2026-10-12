@@ -1,0 +1,35 @@
+seed: 44
+
+# 43 => Tous bloqué, en 2 groupes
+# 44 => 4 suivent, et bloquent avec le dernier
+# 45 => 2 groupes valides
+# 46 => 3 groupes valides
+# 46 => 1 groupe valide !
+
+spawn:
+  spawn_zone_x_min: -1.2
+  spawn_zone_x_max:  1.2
+  spawn_zone_y_min: -1.2
+  spawn_zone_y_max:  1.2
+  min_robot_distance: 0.25
+  max_placement_attempts: 1000
+
+robot:
+  seuil: 50
+  dist_stop: 0.05
+  dist_slow: 0.25
+  max_speed: 5.0
+  min_speed: 1.0
+  turn_gain: 1.5
+  cruise_l: 4.0
+  cruise_r: 3.5
+  reverse_turn: false
+  sensor_angles_deg: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+  lookup:
+    - [0.0,  1024]
+    - [0.05, 1000]
+    - [0.5,  800]
+    - [1.0,  600]
+    - [2.0,  300]
+    - [3.0,  120]
+    - [4.0,  0]

@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 from random import Random
 
@@ -9,19 +10,19 @@ from launch.substitutions import LaunchConfiguration
 from webots_ros2_driver.webots_launcher import WebotsLauncher
 from webots_ros2_driver.webots_controller import WebotsController
 
+from ri_a1.config import load_config
 from ri_a1.spawn import generate_spawn_poses, randomize_world
 
+
 ROBOT_NAMES = ['robot_0', 'robot_1', 'robot_2', 'robot_3', 'robot_4']
+
 
 def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'random_seed',
-            default_value='42',
-            description=(
-                'Seed for reproducible spawn positions. '
-                'Use -1 for a random seed at each launch.'
-            ),
+            default_value='',
+            description='Override seed from config (int). Empty = use config value.',
         ),
         OpaqueFunction(function=_launch_with_random_spawn),
     ])
@@ -32,19 +33,43 @@ def _launch_with_random_spawn(context):
     world_path = os.path.join(pkg, 'worlds', 'world.wbt')
     urdf_path = os.path.join(pkg, 'resource', 'robot.urdf')
 
+    cfg_full = load_config()
+    cfg = cfg_full.get('spawn', {})
+
+    seed = int(cfg_full.get('seed', 42))
+    cli_seed = LaunchConfiguration('random_seed').perform(context)
+    if cli_seed:
+        seed = int(cli_seed)
+
+    spawn_zone = (
+        float(cfg.get('spawn_zone_x_min', -1.2)),
+        float(cfg.get('spawn_zone_x_max',  1.2)),
+        float(cfg.get('spawn_zone_y_min', -1.2)),
+        float(cfg.get('spawn_zone_y_max',  1.2)),
+    )
+    min_dist = float(cfg.get('min_robot_distance', 0.25))
+    max_attempts = int(cfg.get('max_placement_attempts', 1000))
+
+    print(f'[spawn] seed={seed} zone={spawn_zone} min_dist={min_dist}')
+
     with open(world_path, encoding='utf-8') as f:
         world_content = f.read()
 
-    seed = int(LaunchConfiguration('random_seed').perform(context))
     rng = Random() if seed < 0 else Random(seed)
 
-    poses = generate_spawn_poses(ROBOT_NAMES, rng)
+    poses = generate_spawn_poses(
+        ROBOT_NAMES, rng,
+        spawn_zone=spawn_zone,
+        min_robot_distance=min_dist,
+        max_attempts=max_attempts,
+    )
     randomized_world = randomize_world(world_content, poses)
 
     proto_abs = os.path.join(pkg, 'worlds', 'protos', 'TricycleRobot.proto')
-    randomized_world = randomized_world.replace(
-        'EXTERNPROTO "protos/TricycleRobot.proto"',
+    randomized_world = re.sub(
+        r'EXTERNPROTO "[^"]*TricycleRobot\.proto"',
         f'EXTERNPROTO "{proto_abs}"',
+        randomized_world,
     )
 
     tmp = tempfile.NamedTemporaryFile(
@@ -56,12 +81,12 @@ def _launch_with_random_spawn(context):
     )
     with tmp:
         tmp.write(randomized_world)
-    world_path = tmp.name
+    tmp_world_path = tmp.name
 
     for name, (x, y, yaw) in poses.items():
         print(f'[spawn] {name}: x={x:.3f} y={y:.3f} yaw={yaw:.3f}')
 
-    webots = WebotsLauncher(world=world_path)
+    webots = WebotsLauncher(world=tmp_world_path)
 
     actions = [webots]
 

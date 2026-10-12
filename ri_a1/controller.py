@@ -2,39 +2,56 @@ import sys
 import math
 import random
 
+from ri_a1.config import load_config
+
+
+DEFAULTS = {
+    'seed': 43,
+    'seuil': 50,
+    'dist_stop': 0.1,
+    'dist_slow': 0.5,
+    'max_speed': 5.0,
+    'min_speed': 1.0,
+    'turn_gain': 2.5,
+    'cruise_l': 4.0,
+    'cruise_r': 3.5,
+    'reverse_turn': False,
+    'sensor_angles_deg': [-50, -40, -30, -20, -10, 0,
+                          10, 20, 30, 40, 50],
+    'lookup': [
+        [0.0,  1024],
+        [0.05, 1000],
+        [0.5,  800],
+        [1.0,  600],
+        [2.0,  300],
+        [3.0,  120],
+        [4.0,  0],
+    ],
+}
+
 
 class MyRobotDriver:
-
-    SENSOR_ANGLES_DEG = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
-
-    SEED = 42
-
-    SEUIL = 50
-
-    DIST_STOP = 0.1
-    DIST_SLOW = 0.5
-
-    MAX_SPEED = 5.0
-    MIN_SPEED = 1.0
-    TURN_GAIN = 2.5
-    CRUISE_L = 4.0
-    CRUISE_R = 3.5
-
-    REVERSE_TURN = False
-
-    LOOKUP = [
-        (0.0,  1024),
-        (0.05, 1000),
-        (0.5,  800),
-        (1.0,  600),
-        (2.0,  300),
-        (3.0,  120),
-        (4.0,  0),
-    ]
 
     def init(self, webots_node, properties):
         self.__robot = webots_node.robot
         self.__name = self.__robot.getName()
+
+        cfg_full = load_config()
+        cfg = dict(DEFAULTS)
+        cfg.update(cfg_full.get('robot', {}))
+
+        self.SEED              = int(cfg['seed'])
+        self.SEUIL             = int(cfg['seuil'])
+        self.DIST_STOP         = float(cfg['dist_stop'])
+        self.DIST_SLOW         = float(cfg['dist_slow'])
+        self.MAX_SPEED         = float(cfg['max_speed'])
+        self.MIN_SPEED         = float(cfg['min_speed'])
+        self.TURN_GAIN         = float(cfg['turn_gain'])
+        self.CRUISE_L          = float(cfg['cruise_l'])
+        self.CRUISE_R          = float(cfg['cruise_r'])
+        self.REVERSE_TURN      = bool(cfg['reverse_turn'])
+        self.SENSOR_ANGLES_DEG = list(cfg['sensor_angles_deg'])
+        self.LOOKUP            = [tuple(p) for p in cfg['lookup']]
 
         robot_index = 0
         if '_' in self.__name:
@@ -51,8 +68,9 @@ class MyRobotDriver:
         self.__left_motor.setVelocity(0.0)
         self.__right_motor.setVelocity(0.0)
 
+        n = len(self.SENSOR_ANGLES_DEG)
         self.__sensors = []
-        for i in range(11):
+        for i in range(n):
             s = self.__robot.getDevice(f'ds_{i}')
             if s is None:
                 print(f'[{self.__name}] ds_{i} INTROUVABLE',
@@ -65,7 +83,8 @@ class MyRobotDriver:
             math.sin(math.radians(a)) for a in self.SENSOR_ANGLES_DEG
         ]
 
-        print(f'[{self.__name}] init OK ({len(self.__sensors)} capteurs)',
+        print(f'[{self.__name}] init OK '
+              f'({len(self.__sensors)} capteurs, seuil={self.SEUIL})',
               file=sys.stderr, flush=True)
 
     def __set(self, l, r):

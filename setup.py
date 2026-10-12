@@ -16,6 +16,7 @@ setup(
         (os.path.join('share', package_name, 'resource'), glob('resource/*')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.wbt')),
         (os.path.join('share', package_name, 'worlds', 'protos'), glob('worlds/protos/*.proto')),
+        (os.path.join('share', package_name, 'config'), glob('config/*.yml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

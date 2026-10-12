@@ -3,9 +3,10 @@ from random import Random
 import re
 from typing import Sequence
 
-SPAWN_ZONE = (-1.2, 1.2, -1.2, 1.2)
-MIN_ROBOT_DISTANCE = 0.25
-MAX_PLACEMENT_ATTEMPTS = 1000
+
+DEFAULT_SPAWN_ZONE = (-1.2, 1.2, -1.2, 1.2)
+DEFAULT_MIN_ROBOT_DISTANCE = 0.25
+DEFAULT_MAX_PLACEMENT_ATTEMPTS = 1000
 
 _ROBOT_POSE = re.compile(
     r'(?P<indent>^[ \t]*)translation '
@@ -20,17 +21,20 @@ _ROBOT_POSE = re.compile(
 def generate_spawn_poses(
     robot_names: Sequence[str],
     rng: Random,
+    spawn_zone: tuple[float, float, float, float] = DEFAULT_SPAWN_ZONE,
+    min_robot_distance: float = DEFAULT_MIN_ROBOT_DISTANCE,
+    max_attempts: int = DEFAULT_MAX_PLACEMENT_ATTEMPTS,
 ) -> dict[str, tuple[float, float, float]]:
-    """Return non-overlapping ``(x, y, yaw)`` poses inside ``SPAWN_ZONE``."""
-    min_x, max_x, min_y, max_y = SPAWN_ZONE
+    """Return non-overlapping ``(x, y, yaw)`` poses inside ``spawn_zone``."""
+    min_x, max_x, min_y, max_y = spawn_zone
     poses: dict[str, tuple[float, float, float]] = {}
 
     for name in robot_names:
-        for _ in range(MAX_PLACEMENT_ATTEMPTS):
+        for _ in range(max_attempts):
             x = rng.uniform(min_x, max_x)
             y = rng.uniform(min_y, max_y)
             if all(
-                hypot(x - other_x, y - other_y) >= MIN_ROBOT_DISTANCE
+                hypot(x - other_x, y - other_y) >= min_robot_distance
                 for other_x, other_y, _ in poses.values()
             ):
                 poses[name] = (
@@ -41,7 +45,7 @@ def generate_spawn_poses(
         else:
             raise RuntimeError(
                 f'Unable to place {name!r} in the configured spawn zone '
-                f'after {MAX_PLACEMENT_ATTEMPTS} attempts'
+                f'after {max_attempts} attempts'
             )
 
     return poses
