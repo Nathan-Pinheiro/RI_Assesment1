@@ -11,9 +11,7 @@ from webots_ros2_driver.webots_controller import WebotsController
 
 from ri_a1.spawn import generate_spawn_poses, randomize_world
 
-
 ROBOT_NAMES = ['robot_0', 'robot_1', 'robot_2', 'robot_3', 'robot_4']
-
 
 def generate_launch_description():
     return LaunchDescription([
@@ -43,7 +41,6 @@ def _launch_with_random_spawn(context):
     poses = generate_spawn_poses(ROBOT_NAMES, rng)
     randomized_world = randomize_world(world_content, poses)
 
-    # Remplace le chemin relatif du PROTO par un chemin absolu
     proto_abs = os.path.join(pkg, 'worlds', 'protos', 'TricycleRobot.proto')
     randomized_world = randomized_world.replace(
         'EXTERNPROTO "protos/TricycleRobot.proto"',
