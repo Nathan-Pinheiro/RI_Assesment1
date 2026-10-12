@@ -1,15 +1,15 @@
 # ri_a1 — ROS 2 + Webots Project
 
-ROS 2 (ament_python) project for simulating and controlling a swarm of e-puck robots in Webots.
+ROS 2 Humble (ament_python) project for simulating and controlling five tricycle robots in Webots R2025a.
 The `ri_a1` package contains the robot controller plugin, the launch file, the URDF model and the Webots world.
 
 ---
 
 ## Requirements
 
-- **Ubuntu** 22.04 or 24.04
-- **ROS 2** Jazzy (adjust `$ROS_DISTRO` if you use another distro)
-- **Webots** (R2023b recommended with `webots_ros2`; R2025a may work but is not officially supported)
+- **Ubuntu** 22.04
+- **ROS 2** Humble
+- **Webots** R2025a
 - `webots_ros2` :
   ```bash
   sudo apt install ros-$ROS_DISTRO-webots-ros2
@@ -76,7 +76,44 @@ source install/setup.bash
 ros2 launch ri_a1 launch.py
 ```
 
-This starts Webots with `world.wbt` and connects one `WebotsController` per e-puck (`epuck_1` … `epuck_5`).
+This starts the randomized world and connects one `WebotsController` for each robot (`robot_0` … `robot_4`).
+
+### Ubuntu and Webots on the same machine
+
+Source ROS 2 and the workspace, then launch normally:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+ros2 launch ri_a1 launch.py
+```
+
+### Ubuntu VM with Webots on macOS
+
+Install `webots_ros2_driver` in the VM and Webots R2025a on macOS. Configure
+`WEBOTS_SHARED_FOLDER` on both sides to the shared directory used by
+`local_simulation_server.py`, and ensure the VM can reach the server's TCP
+port. Start the server on macOS using the command supplied by your
+`webots_ros2_driver` installation, for example:
+
+```bash
+python3 local_simulation_server.py --port 1234
+```
+
+Then, in the VM, export the shared-folder path and launch:
+
+```bash
+export WEBOTS_SHARED_FOLDER=/path/to/the/shared/folder
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+ros2 launch ri_a1 launch.py
+```
+
+The shared folder must be writable by the VM and visible to the native Mac
+Webots process. The launch file keeps the generated world beside the packaged
+`worlds/protos/` directory, allowing `WebotsLauncher` to transfer
+`TricycleRobot.proto` automatically; no source-code path changes are needed
+for either machine.
 
 ---
 
@@ -144,35 +181,40 @@ ros2 node list
 ros2 topic list
 ```
 
-Expected:
+Expected robot nodes:
 
 ```
-/epuck_1/epuck_1
-/epuck_2/epuck_2
-...
+/robot_0/robot_0
+/robot_1/robot_1
+/robot_2/robot_2
+/robot_3/robot_3
+/robot_4/robot_4
 ```
 
 Topics:
 
 ```
-/epuck_1/cmd_vel
-/epuck_2/cmd_vel
+/robot_0/cmd_vel
+/robot_1/cmd_vel
 ...
 ```
 
 ### Useful commands
 
 ```bash
+# Confirm all five controller connections
+for i in 0 1 2 3 4; do ros2 node list | grep -q "/robot_${i}" && echo "robot_${i}: connected"; done
+
 # View published topics
-ros2 topic echo /epuck_1/cmd_vel
+ros2 topic list | grep robot_
 
 # Drive one robot forward
-ros2 topic pub -r 10 /epuck_1/cmd_vel geometry_msgs/msg/TwistStamped \
+ros2 topic pub -r 10 /robot_0/cmd_vel geometry_msgs/msg/TwistStamped \
   "{twist: {linear: {x: 0.05}, angular: {z: 0.0}}}"
 
 # Make every robot spin on the spot
-for i in 1 2 3 4 5; do
-  ros2 topic pub -r 10 /epuck_$i/cmd_vel geometry_msgs/msg/TwistStamped \
+for i in 0 1 2 3 4; do
+  ros2 topic pub -r 10 /robot_$i/cmd_vel geometry_msgs/msg/TwistStamped \
     "{twist: {linear: {x: 0.0}, angular: {z: 1.0}}}" &
 done
 wait

@@ -1,5 +1,4 @@
 import os
-import re
 import tempfile
 from random import Random
 
@@ -65,17 +64,17 @@ def _launch_with_random_spawn(context):
     )
     randomized_world = randomize_world(world_content, poses)
 
-    proto_abs = os.path.join(pkg, 'worlds', 'protos', 'TricycleRobot.proto')
-    randomized_world = re.sub(
-        r'EXTERNPROTO "[^"]*TricycleRobot\.proto"',
-        f'EXTERNPROTO "{proto_abs}"',
-        randomized_world,
-    )
-
+    # Keep the generated world next to the packaged `protos/` directory.  In
+    # shared-folder mode WebotsLauncher resolves relative assets from this
+    # directory, copies them to WEBOTS_SHARED_FOLDER, and rewrites their paths
+    # for the remote Webots process.  A /tmp world would make the PROTO look
+    # like /tmp/protos/TricycleRobot.proto, while an absolute path would point
+    # at the ROS machine and be unusable by Webots on the Mac.
     tmp = tempfile.NamedTemporaryFile(
         mode='w',
         prefix='ri_a1_random_',
         suffix='.wbt',
+        dir=os.path.dirname(world_path),
         encoding='utf-8',
         delete=False,
     )
