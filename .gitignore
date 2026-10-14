@@ -1,0 +1,8 @@
+/.agents
+/.codex
+__pycache__/
+*.pyc
+build/
+install/
+log/
+.venv/

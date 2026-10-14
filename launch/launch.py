@@ -41,10 +41,10 @@ def _launch_with_random_spawn(context):
         seed = int(cli_seed)
 
     spawn_zone = (
-        float(cfg.get('spawn_zone_x_min', -1.2)),
-        float(cfg.get('spawn_zone_x_max',  1.2)),
-        float(cfg.get('spawn_zone_y_min', -1.2)),
-        float(cfg.get('spawn_zone_y_max',  1.2)),
+        float(cfg.get('spawn_zone_x_min', -1.0)),
+        float(cfg.get('spawn_zone_x_max',  1.0)),
+        float(cfg.get('spawn_zone_y_min', -1.0)),
+        float(cfg.get('spawn_zone_y_max',  1.0)),
     )
     min_dist = float(cfg.get('min_robot_distance', 0.25))
     max_attempts = int(cfg.get('max_placement_attempts', 1000))
