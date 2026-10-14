@@ -1,54 +1,254 @@
-\documentclass[10pt,a4paper,twocolumn]{article}
+\documentclass[conference]{IEEEtran}
+% Options possibles : conference, journal, 10pt, a4paper, etc.
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-\usepackage{lmodern}
-\usepackage[margin=2cm,columnsep=0.6cm]{geometry}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{amsmath,amssymb}
+\usepackage{booktabs}
 \usepackage{hyperref}
-\usepackage{authblk}
-\usepackage{titlesec}
+\usepackage{cite}
+\usepackage{siunitx}
 
-\titlespacing*{\section}{0pt}{1.2ex plus .2ex}{0.6ex}
-\setlength{\parskip}{0.3em}
-\setlength{\parindent}{0pt}
+% --- Titre et auteurs ---
+\title{Reactive Following with Five Differential-Drive Robots in Webots and ROS~2}
 
-\title{\vspace{-1.5em}\textbf{Title of the Article}}
-\author[1]{Author 1}
-\author[2]{Author 2}
-\affil[1]{Institution, email}
-\affil[2]{Institution, email}
-\date{}
+\author{
+\IEEEauthorblockN{??? Magnus, ??? Julio, COLOMBU Jules, PINHEIRO Nathan}
+\IEEEauthorblockA{
+Faculdade de Engenharia da Universidade do Porto (FEUP)\\
+Porto, Portugal\\
+\{email1, email2, email3, email4\}@fe.up.pt % TODO
+}
+}
 
 \begin{document}
 \maketitle
-\vspace{-1em}
 
 \begin{abstract}
-\noindent Abstract of the article in 100–150 words. Problem statement, method, main results, conclusion.
+\normalfont
+This paper presents a purely reactive multi-robot following behaviour
+implemented in Webots~R2025a and ROS~2. Five differential-drive robots,
+each with its own constant cruise speed and base curvature, are equipped
+with an array of eleven frontal distance sensors
+($100^{\circ}$ field of view, \SI{4}{m} range). A robot that detects a
+neighbour turns towards it and follows it; when the neighbour is lost,
+it resumes its own base curve. The controller uses only the current local
+sensor readings: no global localisation, no target memory. We describe
+the architecture, the controller and its parameters, and we evaluate the
+behaviour over several randomised initial conditions.
+% [TODO] One sentence with the main quantitative result,
+% e.g. mean following duration and number of collisions.
 \end{abstract}
 
-\noindent\textbf{Keywords:} keyword1, keyword2, keyword3
+\begin{IEEEkeywords}
+reactive control, multi-robot systems, following behaviour, Webots, ROS~2
+\end{IEEEkeywords}
 
 \section{Introduction}
-Context, problem, research question, contributions.
 
-\section{Related Work}
-Concise state of the art. 5–10 key references.
+Simple reactive rules can produce rich collective behaviour:
+Braitenberg's vehicles~\cite{braitenberg1984vehicles}, Brooks' layered
+reactive control~\cite{brooks1986robust} and Reynolds' flocking
+model~\cite{reynolds1987flocks} all show that coupling sensing directly
+to motion, without a world model, is enough to generate coordinated
+motion. This work follows that spirit in a small experimental setting.
 
-\section{Methodology}
-Description of the approach, data, model, protocol.
+The challenge is the following. Five robots move in a flat arena, each
+with a different constant speed and base curvature. When a robot sees a
+neighbour in its frontal sensing region, it must turn towards it and
+follow it. The control must be strictly reactive (current local readings
+only). The goals are to
+\begin{enumerate}
+    \item implement the controller,
+    \item connect sensing and motion through ROS~2, and
+    \item study the collective behaviour that emerges (chains, groups
+          and failures).
+\end{enumerate}
 
-\section{Results and Discussion}
-Tables, figures, comparisons, interpretation.
+The contributions are:
+\begin{itemize}
+    \item a reproducible five-robot Webots/ROS~2 setup with seeded
+          random initial poses;
+    \item a stateless following controller with a documented parameter
+          set; and
+    \item an experimental analysis of its behaviour.
+\end{itemize}
 
-\section{Conclusion}
-Summary of contributions, limitations, future work.
+The rest of the paper is organised as follows. Section~\ref{sec:arch}
+describes the architecture, Section~\ref{sec:ctrl} the controller,
+Section~\ref{sec:exp} the experiments, and
+Sections~\ref{sec:disc}--\ref{sec:conc} discuss the results and
+conclude.
 
-\bibliographystyle{plain}
+% ============================================================
+\section{System Architecture}
+
+\subsection{Simulation Environment}
+% [TODO] Description de l'environnement Webots, dimensions, seed, génération aléatoire.
+
+\subsection{Robot Model}
+% [TODO] Description du PROTO, dimensions, capteurs, actionneurs.
+
+\subsection{ROS~2 Integration}
+% [TODO] Launch file, namespaces, plugin Python, YAML de paramètres.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figures/architecture.pdf}
+    \caption{System architecture.}
+    \label{fig:architecture}
+\end{figure}
+
+% ============================================================
+\section{Reactive Controller}
+% [TODO] Introduction : contrôleur sans état, trois situations.
+
+\subsection{Cruise Behaviour}
+% [TODO] Comportement de croisière, formule de courbure.
+\begin{equation}
+\begin{aligned}
+\omega_{L} &= \min\!\bigl(\omega_{\max},\, s_{k}(1 + \kappa_{k})\bigr),\\
+\omega_{R} &= \min\!\bigl(\omega_{\max},\, s_{k}(1 - \kappa_{k})\bigr).
+\end{aligned}
+\label{eq:cruise}
+\end{equation}
+% [TODO] Signification de kappa > 0, kappa < 0, kappa = 0.
+
+\subsection{Detection and Following}
+% [TODO] Seuil de détection, estimation de distance, inversion du LUT.
+\begin{equation}
+s(\rho) =
+\begin{cases}
+0, & \rho \leq \rho_{\text{stop}},\\[2pt]
+\max\!\bigl(\omega_{\max}\, t,\, 0.3\,\omega_{\min}\bigr), & \rho_{\text{stop}} < \rho < \rho_{\text{slow}},\\[2pt]
+\omega_{\max}, & \rho \geq \rho_{\text{slow}}.
+\end{cases}
+\label{eq:speed}
+\end{equation}
+% [TODO] Loi de direction (somme pondérée des capteurs).
+\begin{equation}
+\begin{aligned}
+u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi_i,\; -1,\; 1\Bigr),\\
+\Delta &= g\, u\, s(\rho),\\
+\omega_{L} &= \operatorname{clip}(s - \Delta,\, 0,\, \omega_{\max}),\\
+\omega_{R} &= \operatorname{clip}(s + \Delta,\, 0,\, \omega_{\max}).
+\end{aligned}
+\label{eq:steering}
+\end{equation}
+
+\subsection{Parameters}
+% [TODO] Description des paramètres (Tables~\ref{tab:params} et~\ref{tab:cruise}).
+
+\begin{table}[t]
+    \centering
+    \caption{Controller parameters (default configuration).}
+    \label{tab:params}
+    \begin{tabular}{lll}
+        \toprule
+        Symbol & Meaning & Value \\
+        \midrule
+        $\theta$        & detection threshold (reading) & 50 \\
+        $\rho_{\text{stop}}$ & stop distance          & \SI{0.05}{m} \\
+        $\rho_{\text{slow}}$ & slow-down distance     & \SI{0.25}{m} \\
+        $\omega_{\max},\ \omega_{\min}$ & wheel speed limits & 5, 1~rad/s \\
+        $g$             & turning gain                   & 1.5 \\
+        $s_k,\ \kappa_k$ & cruise speed / curvature      & Table~\ref{tab:cruise} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[t]
+    \centering
+    \caption{Per-robot cruise settings and resulting motion.}
+    \label{tab:cruise}
+    \begin{tabular}{lcccccc}
+        \toprule
+        Robot & $s_k$ & $\kappa_k$ & $\omega_L$ & $\omega_R$ & $v$ (m/s) & $\rho_c$ (m) \\
+        \midrule
+        robot\_0 & 10.0 & $+0.60$ & 5.00 & 4.00 & 0.090 & 0.315 \\
+        robot\_1 &  8.0 & $+0.50$ & 5.00 & 4.00 & 0.090 & 0.315 \\
+        robot\_2 &  4.0 & $-0.30$ & 2.80 & 5.00 & 0.078 & 0.124 \\
+        robot\_3 &  2.5 & $+0.10$ & 2.75 & 2.25 & 0.050 & 0.350 \\
+        robot\_4 &  2.5 & $-0.60$ & 1.00 & 4.00 & 0.050 & 0.058 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ============================================================
+\section{Experiments and Results}
+
+\subsection{Protocol}
+% [TODO] Trois conditions, seeds, durée, métriques.
+
+\begin{table}[t]
+    \centering
+    \caption{Results per condition (mean $\pm$ std over $N$ runs).}
+    \label{tab:results}
+    \begin{tabular}{lcc}
+        \toprule
+        Metric & No following & Weak turn \\
+        \midrule
+        Following duration (s) & -- & -- \\
+        Angular error (deg)    & -- & -- \\
+        Target losses          & -- & -- \\
+        Collisions             & -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Quantitative Results}
+% [TODO] Résumé quantitatif (Table~\ref{tab:results}).
+
+\subsection{Qualitative Observations}
+% [TODO] Observations qualitatives, plusieurs seeds.
+
+\begin{table}[t]
+    \centering
+    \caption{Preliminary outcomes observed for different seeds.}
+    \label{tab:seeds}
+    \begin{tabular}{ll}
+        \toprule
+        Seed & Observed outcome \\
+        \midrule
+        -- & -- \\
+        -- & -- \\
+        -- & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figures/trajectories.png}
+    \caption{Trajectories drawn by the five robots for the same initial conditions.}
+    \label{fig:trajectories}
+\end{figure}
+
+% ============================================================
+\section{Discussion}
+% [TODO] Chaînes et groupes.
+% [TODO] Modes d'échec.
+% [TODO] Effets des paramètres.
+
+% ============================================================
+\section{Conclusions and Limitations}
+% [TODO] Rappel de la contribution.
+% [TODO] Limites principales.
+% [TODO] Extensions naturelles.
+
+% ============================================================
+\section*{Code and Video}
+% [TODO] Code : URL du dépôt. Vidéo de démonstration : lien.
+
+% ============================================================
+\section*{Author Contributions}
+% [TODO] Une ligne par auteur décrivant sa contribution.
+
+% ============================================================
+\nocite{*}
+\bibliographystyle{IEEEtran}
 \bibliography{references}
 
 \end{document}

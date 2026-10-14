@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-#  install_deps.sh
+#  install_latex.sh
 #  Installs all LaTeX dependencies required to compile
 #  report.tex (Debian / Ubuntu / WSL)
 # ============================================================
@@ -21,6 +21,7 @@ sudo apt install -y \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-science \
+    texlive-publishers \
     texlive-bibtex-extra \
     biber \
     latexmk
@@ -28,8 +29,8 @@ sudo apt install -y \
 echo "============================================"
 echo " Verifying critical packages..."
 echo "============================================"
-for pkg in booktabs.sty geometry.sty graphicx.sty hyperref.sty \
-           amsmath.sty authblk.sty titlesec.sty babel.sty; do
+for pkg in IEEEtran.cls booktabs.sty geometry.sty graphicx.sty hyperref.sty \
+           amsmath.sty authblk.sty titlesec.sty babel.sty siunitx.sty; do
     if kpsewhich "$pkg" > /dev/null 2>&1; then
         echo "  [OK]  $pkg"
     else
@@ -39,5 +40,5 @@ done
 
 echo "============================================"
 echo " Installation complete."
-echo " You can now run ./build.sh"
+echo " You can now run ./build_pdf.sh"
 echo "============================================"
