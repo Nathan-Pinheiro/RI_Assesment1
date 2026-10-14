@@ -1,0 +1,55 @@
+\documentclass[10pt,a4paper,twocolumn]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2cm,columnsep=0.6cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{authblk}
+\usepackage{titlesec}
+
+% Réglages pour gagner de la place
+\titlespacing*{\section}{0pt}{1.2ex plus .2ex}{0.6ex}
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0pt}
+
+\title{\vspace{-1.5em}\textbf{Titre de l'article}}
+\author[1]{Auteur 1}
+\author[2]{Auteur 2}
+\affil[1]{Institution, email}
+\affil[2]{Institution, email}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1em}
+
+\begin{abstract}
+\noindent Résumé de l'article en 100–150 mots. Problématique, méthode, résultats principaux, conclusion.
+\end{abstract}
+
+\noindent\textbf{Mots-clés :} mot1, mot2, mot3
+
+\section{Introduction}
+Contexte, problème, question de recherche, contributions.
+
+\section{Travaux connexes}
+État de l'art synthétique. 5–10 références clés.
+
+\section{Méthodologie}
+Description de l'approche, données, modèle, protocole.
+
+\section{Résultats et discussion}
+Tableaux, figures, comparaisons, interprétation.
+
+\section{Conclusion}
+Résumé des apports, limites, pistes futures.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
