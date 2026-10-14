@@ -1,0 +1,9 @@
+# Ignore everything in this directory
+*
+
+# But keep these files
+!report.tex
+!references.bib
+!install_deps.sh
+!build.sh
+!.gitignore
