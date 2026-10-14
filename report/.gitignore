@@ -4,6 +4,5 @@
 # But keep these files
 !report.tex
 !references.bib
-!install_deps.sh
-!build.sh
+!*.sh
 !.gitignore
