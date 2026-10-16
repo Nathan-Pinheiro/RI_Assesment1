@@ -1,4 +1,4 @@
-seed: 51
+seed: 14
 
 # 43 => Tous bloqué, en 2 groupes
 # 44 => 4 suivent, et bloquent avec le dernier
@@ -6,11 +6,13 @@ seed: 51
 # 46 => 3 groupes valides
 # 46 => 1 groupe valide !
 
+
+
 spawn:
-  spawn_zone_x_min: -1.5
-  spawn_zone_x_max:  1.5
-  spawn_zone_y_min: -1.5
-  spawn_zone_y_max:  1.5
+  spawn_zone_x_min: -1.0
+  spawn_zone_x_max:  1.0
+  spawn_zone_y_min: -1.0
+  spawn_zone_y_max:  1.0
   min_robot_distance: 0.5
   max_placement_attempts: 1000
 
