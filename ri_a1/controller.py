@@ -156,7 +156,7 @@ class MyRobotDriver:
         dist = self.__reading_to_distance(max_d)
 
         if dist <= self.DIST_STOP:
-            self.__set(0.0, 0.0)
+            self.__set(-1.5, 1.5)
             return
         elif dist < self.DIST_SLOW:
             t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
