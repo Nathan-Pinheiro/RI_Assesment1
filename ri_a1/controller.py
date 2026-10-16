@@ -1,11 +1,14 @@
 import sys
 import math
 import random
+import numpy as np
 
 from ri_a1.config import load_config
 
 
 DEFAULTS = {
+    'noise': True, # Gaussian noise wheels
+    'strength': 0.2, # Varians
     'seed': 43,
     'seuil': 50,
     'dist_stop': 0.1,
@@ -28,7 +31,6 @@ DEFAULTS = {
         [4.0,  0],
     ],
 }
-
 
 def _normalize_layer(layer, label):
     """Convert legacy cruise_l/cruise_r in a config layer to speed/curvature."""
@@ -73,6 +75,9 @@ class MyRobotDriver:
         self.__name = self.__robot.getName()
 
         cfg = build_robot_config(load_config(), self.__name)
+
+        self.noise = bool(cfg["noise"])
+        self.noise_s = float(cfg["strength"])
 
         self.SEED              = int(cfg['seed'])
         self.SEUIL             = int(cfg['seuil'])
@@ -128,7 +133,12 @@ class MyRobotDriver:
               f'L={self.CRUISE_L:.2f}, R={self.CRUISE_R:.2f})',
               file=sys.stderr, flush=True)
 
+
     def __set(self, l, r):
+        if self.noise:
+            l += np.random.normal(0, self.noise_s)
+            r += np.random.normal(0, self.noise_s)
+
         self.__left_motor.setVelocity(l)
         self.__right_motor.setVelocity(r)
 

@@ -5,9 +5,9 @@ seed: 14
 # 45 => 2 groupes valides
 # 46 => 3 groupes valides
 # 46 => 1 groupe valide !
-robot:
+noise:
   noise: true
-  strength: 0.2
+  strength: 10
 
 spawn:
   spawn_zone_x_min: -1.0
