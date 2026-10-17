@@ -12,7 +12,7 @@ PROTO TricycleRobot [
     rotation IS rotation
     name IS name
     controller "<extern>"
-    supervisor TRUE
+    supervisor FALSE
     children [
       Shape {
         appearance Appearance {

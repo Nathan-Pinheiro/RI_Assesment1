@@ -122,10 +122,6 @@ class MyRobotDriver:
                 s.enable(32)
                 self.__sensors.append(s)
 
-        self.__sin_angles = [
-            math.sin(math.radians(a)) for a in self.SENSOR_ANGLES_DEG
-        ]
-
         print(f'[{self.__name}] init OK '
               f'({len(self.__sensors)} capteurs, seuil={self.SEUIL}, '
               f'speed={self.CRUISE_SPEED:.2f}, '
@@ -175,11 +171,10 @@ class MyRobotDriver:
         else:
             speed = self.MAX_SPEED
 
-        turn = 0.0
-        for i, di in enumerate(d):
-            if di > self.SEUIL:
-                turn += (di / 1024.0) * self.__sin_angles[i]
-        turn = max(-1.0, min(1.0, turn))
+        # Nearest target: strongest sensor gives its bearing (sensor angle)
+        nearest = d.index(max_d)
+        bearing = math.radians(self.SENSOR_ANGLES_DEG[nearest])
+        turn = math.sin(bearing)
 
         diff = self.TURN_GAIN * turn * speed
         if self.REVERSE_TURN:
