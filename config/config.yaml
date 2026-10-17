@@ -1,4 +1,4 @@
-seed: 14
+seed: 42
 
 # 43 => Tous bloqué, en 2 groupes
 # 44 => 4 suivent, et bloquent avec le dernier
@@ -6,14 +6,15 @@ seed: 14
 # 46 => 3 groupes valides
 # 46 => 1 groupe valide !
 noise:
-  noise: true
+  wheel_noise: true
+  lidar_noise: true
   strength: 10
 
 spawn:
-  spawn_zone_x_min: -1.0
-  spawn_zone_x_max:  1.0
-  spawn_zone_y_min: -1.0
-  spawn_zone_y_max:  1.0
+  spawn_zone_x_min: -0.7
+  spawn_zone_x_max:  0.7
+  spawn_zone_y_min: -0.7
+  spawn_zone_y_max:  0.7
   min_robot_distance: 0.5
   max_placement_attempts: 1000
 
@@ -42,8 +43,8 @@ robot:
 # Surcharges par robot (optionnel). Seules les clés listées sont remplacées ;
 # les robots absents utilisent les valeurs de robot: ci-dessus.
 robots:
-  robot_0: { cruise_speed: 3.0, cruise_curvature:  0.60 }
-  robot_1: { cruise_speed: 3.4, cruise_curvature:  0.20 }
-  robot_2: { cruise_speed: 2.8, cruise_curvature: -0.30 }
-  robot_3: { cruise_speed: 2.5, cruise_curvature:  0.10 }
-  robot_4: { cruise_speed: 2.5, cruise_curvature: -0.60 }
+  robot_0: { cruise_speed: 3.0, cruise_curvature:  0.08 }
+  robot_1: { cruise_speed: 3.4, cruise_curvature:  0.05 }
+  robot_2: { cruise_speed: 2.8, cruise_curvature: -0.04 }
+  robot_3: { cruise_speed: 2.5, cruise_curvature:  0.05 }
+  robot_4: { cruise_speed: 2.5, cruise_curvature: -0.07 }

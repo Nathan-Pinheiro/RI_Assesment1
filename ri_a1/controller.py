@@ -7,8 +7,10 @@ from ri_a1.config import load_config
 
 
 DEFAULTS = {
-    'noise': True, # Gaussian noise wheels
-    'strength': 0.2, # Varians
+    'wheel_noise': True, # Gaussian noise wheels
+    'lidar_noise': True, # Gaussian noise lidar
+    'strength': 0.6, # Varians
+
     'seed': 43,
     'seuil': 50,
     'dist_stop': 0.1,
@@ -76,7 +78,8 @@ class MyRobotDriver:
 
         cfg = build_robot_config(load_config(), self.__name)
 
-        self.noise = bool(cfg["noise"])
+        self.wheel_noise = bool(cfg["wheel_noise"])
+        self.lidar_noise = bool(cfg["lidar_noise"])
         self.noise_s = float(cfg["strength"])
 
         self.SEED              = int(cfg['seed'])
@@ -131,7 +134,7 @@ class MyRobotDriver:
 
 
     def __set(self, l, r):
-        if self.noise:
+        if self.wheel_noise:
             l += np.random.normal(0, self.noise_s)
             r += np.random.normal(0, self.noise_s)
 
@@ -148,6 +151,9 @@ class MyRobotDriver:
                 if v1 == v2:
                     return d1
                 t = (v1 - v) / (v1 - v2)
+
+                if self.lidar_noise:
+                    return (d1 + t * (d2 - d1)) + np.random.normal(0, self.noise_s)
                 return d1 + t * (d2 - d1)
         return 4.0
 
