@@ -42,8 +42,8 @@ robot:
 # Surcharges par robot (optionnel). Seules les clés listées sont remplacées ;
 # les robots absents utilisent les valeurs de robot: ci-dessus.
 robots:
-  robot_0: { cruise_speed: 10.0, cruise_curvature:  0.60 }
-  robot_1: { cruise_speed: 8.0, cruise_curvature:  0.50 }
-  robot_2: { cruise_speed: 4.0, cruise_curvature: -0.30 }
+  robot_0: { cruise_speed: 3.0, cruise_curvature:  0.60 }
+  robot_1: { cruise_speed: 3.4, cruise_curvature:  0.20 }
+  robot_2: { cruise_speed: 2.8, cruise_curvature: -0.30 }
   robot_3: { cruise_speed: 2.5, cruise_curvature:  0.10 }
   robot_4: { cruise_speed: 2.5, cruise_curvature: -0.60 }
