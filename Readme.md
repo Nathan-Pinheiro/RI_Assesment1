@@ -1,65 +1,76 @@
-# ri_a1 — ROS 2 + Webots Project
+# RI Assessment 1 — Multi-robot Webots simulation
 
-ROS 2 Humble (ament_python) project for simulating and controlling five tricycle robots in Webots R2025a.
-The `ri_a1` package contains the robot controller plugin, the launch file, the URDF model and the Webots world.
+ROS 2 package for simulating and controlling five tricycle robots in Webots.
+The package generates a randomized spawn layout, starts one Webots controller
+per robot, publishes distance-sensor readings, and accepts velocity commands
+through ROS 2 topics.
 
----
+## Contents
 
-## Requirements
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Build](#build)
+- [Run the simulation](#run-the-simulation)
+- [Launch arguments](#launch-arguments)
+- [Helper scripts](#helper-scripts)
+- [Configuration](#configuration)
+- [ROS 2 interfaces](#ros-2-interfaces)
+- [Project structure](#project-structure)
+- [Development](#development)
+- [Authors and contributors](#authors-and-contributors)
+- [License](#license)
 
-- **Ubuntu** 22.04
-- **ROS 2** Humble
-- **Webots** R2025a
-- `webots_ros2` :
+## Features
+
+- Five robots (`robot_0` through `robot_4`) in a Webots world.
+- Random, non-overlapping robot placement at startup.
+- Configurable random seed, obstacle avoidance, speed, curvature, and noise.
+- ROS 2 control topics for each robot.
+- Optional headless and accelerated Webots modes.
+- Support for launching Webots on the host while ROS 2 runs in a VM, when
+  `webots_ros2_driver` shared-folder mode is configured.
+
+## Prerequisites
+
+The project is intended for a Linux ROS 2 workspace and Webots R2025a.
+
+Install:
+
+- ROS 2 (the distribution matching the `webots_ros2` installation).
+- Webots R2025a.
+- `colcon` and the ROS 2 Webots driver:
+
   ```bash
+  sudo apt update
+  sudo apt install python3-colcon-common-extensions
   sudo apt install ros-$ROS_DISTRO-webots-ros2
   ```
-- `colcon` :
-  ```bash
-  sudo apt install python3-colcon-common-extensions
-  ```
 
----
+`ROS_DISTRO` must be set before running the second command. For example:
 
-## Project structure
-
-```
-RI_Assesment1/
-├── commands/                   # Here are the commands to build/run.
-│   ├── build.sh
-│   ├── run.sh
-│   └── build_and_run.sh
-├── launch/                     # Contains file for launching
-│   └── launch.py
-├── ri_a1/                      # Here are all the python files
-│   ├── __init__.py
-│   └── controller.py           # Webots plugin controlling each e-puck
-├── resource/
-│   ├── ri_a1
-│   ├── robot.urdf              # Robot URDF description
-│   └── robot.yml               # ros2_control parameters
-├── worlds/
-│   └── world.wbt               # Webots world (5 e-pucks, extern controllers)
-├── package.xml
-├── setup.py
-├── setup.cfg
-├── LICENSE
-└── README.md
+```bash
+source /opt/ros/jazzy/setup.bash
+echo "$ROS_DISTRO"
 ```
 
----
+The helper scripts use `/opt/ros/jazzy/setup.bash` when no ROS environment is
+already sourced. If another distribution is installed, source it explicitly
+before using the scripts.
 
 ## Installation
 
-### 1. Clone into a ROS 2 workspace
+Create a workspace and clone the repository into its `src` directory:
 
 ```bash
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
-git clone <repo-url> RI_Assesment1
+git clone https://github.com/Nathan-Pinheiro/RI_Assesment1.git RI_Assesment1
 ```
 
-### 2. Build
+## Build
+
+Source ROS 2, build the package, then source the generated workspace:
 
 ```bash
 cd ~/ros2_ws
@@ -68,112 +79,147 @@ colcon build --packages-select ri_a1 --symlink-install
 source install/setup.bash
 ```
 
----
+The `--symlink-install` option makes changes to Python, launch, YAML, and
+world files available without copying them into the install space. Rebuild
+after changing package metadata or adding files that must be installed.
 
-## Launch
+## Run the simulation
+
+After building and sourcing the workspace:
 
 ```bash
 ros2 launch ri_a1 launch.py
 ```
 
-This starts the randomized world and connects one `WebotsController` for each robot (`robot_0` … `robot_4`).
+This command:
 
-### Ubuntu and Webots on the same machine
+1. Reads `config/config.yaml`.
+2. Generates a randomized copy of `worlds/world.wbt`.
+3. Starts Webots and five `WebotsController` instances.
+4. Removes the generated world when the launch process shuts down.
 
-Source ROS 2 and the workspace, then launch normally:
+To verify that the package is available before launching:
 
 ```bash
-source /opt/ros/humble/setup.bash
+ros2 pkg prefix ri_a1
+ros2 launch ri_a1 launch.py --show-args
+```
+
+### Webots on another machine or in a VM
+
+For a VM running ROS 2 and a host running Webots, configure
+`webots_ros2_driver`'s shared-folder mode first. The shared directory must be
+writable from the VM and visible to Webots on the host. Then set the shared
+folder in the ROS 2 environment and launch the package:
+
+```bash
+export WEBOTS_SHARED_FOLDER=/path/to/shared/folder
+source /opt/ros/$ROS_DISTRO/setup.bash
 source ~/ros2_ws/install/setup.bash
 ros2 launch ri_a1 launch.py
 ```
 
-### Ubuntu VM with Webots on macOS
+The launch file keeps the generated world next to
+`worlds/protos/TricycleRobot.proto`, so the relative PROTO path remains valid
+in shared-folder mode. Follow the `webots_ros2_driver` documentation for the
+host-side simulation server and its TCP port.
 
-Install `webots_ros2_driver` in the VM and Webots R2025a on macOS. Configure
-`WEBOTS_SHARED_FOLDER` on both sides to the shared directory used by
-`local_simulation_server.py`, and ensure the VM can reach the server's TCP
-port. Start the server on macOS using the command supplied by your
-`webots_ros2_driver` installation, for example:
+## Launch arguments
+
+The launch file provides the following arguments:
+
+| Argument | Default | Description |
+| --- | --- | --- |
+| `random_seed` | Empty | Overrides `seed` from `config/config.yaml`. |
+| `mode` | `realtime` | Webots mode: `realtime`, `fast`, or `pause`. |
+| `gui` | `true` | Set to `false` for headless execution. |
+
+Examples:
 
 ```bash
-python3 local_simulation_server.py --port 1234
+# Repeatable spawn layout with a specific seed
+ros2 launch ri_a1 launch.py random_seed:=45
+
+# Run without Webots rendering
+ros2 launch ri_a1 launch.py gui:=false
+
+# Run as fast as possible
+ros2 launch ri_a1 launch.py mode:=fast
 ```
-
-Then, in the VM, export the shared-folder path and launch:
-
-```bash
-export WEBOTS_SHARED_FOLDER=/path/to/the/shared/folder
-source /opt/ros/humble/setup.bash
-source ~/ros2_ws/install/setup.bash
-ros2 launch ri_a1 launch.py
-```
-
-The shared folder must be writable by the VM and visible to the native Mac
-Webots process. The launch file keeps the generated world beside the packaged
-`worlds/protos/` directory, allowing `WebotsLauncher` to transfer
-`TricycleRobot.proto` automatically; no source-code path changes are needed
-for either machine.
-
----
 
 ## Helper scripts
 
-Three scripts are provided in `commands/` to simplify the workflow.
-Make them executable once:
-
-```bash
-chmod +x ~/ros2_ws/src/RI_Assesment1/commands/*.sh
-```
-
-Then, from the repo root (`RI_Assesment1/`):
-
-```bash
-./commands/build.sh          # Build only
-./commands/run.sh            # Run only (assumes a previous build)
-./commands/build_and_run.sh  # Build then run
-```
-
-Each script automatically locates the workspace root, so it can be called from anywhere.
-
-
-## Use your GPU
-
-by default, the webot use the CPU, which is bad. This script will make it use the GPU
+The `commands/` directory contains scripts for the common workflow. Make them
+executable once:
 
 ```bash
 cd ~/ros2_ws/src/RI_Assesment1
 chmod +x commands/*.sh
-./commands/setup_gpu.sh
 ```
 
----
+Use them from the repository root or from another directory:
 
-## Per-robot tuning
+```bash
+./commands/build.sh
+./commands/run.sh
+./commands/build_and_run.sh
+```
 
-Cruise behaviour (when no obstacle is detected) is set in `config/config.yaml`:
+- `build.sh` removes this package's previous build and install directories,
+  then rebuilds it.
+- `run.sh` launches the simulation and requires a successful build.
+- `build_and_run.sh` rebuilds the package, sources the workspace, and launches
+  the simulation.
+- `setup_gpu.sh` configures Mesa D3D12 GPU acceleration for WSL2 only. On
+  native Linux, Webots normally uses the system GPU directly:
 
-- `robot:` holds the defaults shared by every robot.
-- `robots:` is optional and keyed by robot name (`robot_0` … `robot_4`). Only the keys listed there override the defaults.
+  ```bash
+  ./commands/setup_gpu.sh
+  source ~/.bashrc
+  ```
+
+The build and run scripts locate the workspace from the repository path. They
+fall back to Jazzy only when `ROS_DISTRO` is not already set; source the
+desired ROS 2 distribution first when using another distribution.
+
+## Configuration
+
+Runtime settings are stored in
+[`config/config.yaml`](config/config.yaml). The main sections are:
+
+- `seed`: spawn and controller seed. A negative value creates a new spawn
+  layout on every launch.
+- `spawn`: spawn area, minimum distance, and placement-attempt limit.
+- `noise`: global noise settings.
+- `robot`: defaults shared by all robots.
+- `robots`: optional per-robot overrides.
+
+For example:
 
 ```yaml
 robot:
-  cruise_speed: 3.75       # mean wheel speed (rad/s)
-  cruise_curvature: 0.0667 # (L-R)/(L+R): >0 curves right, <0 curves left, 0 = straight
+  cruise_speed: 3.75
+  cruise_curvature: 0.0667
 
 robots:
-  robot_1: { cruise_speed: 3.0, cruise_curvature: 0.10 }
+  robot_1:
+    cruise_speed: 3.0
+    cruise_curvature: 0.10
 ```
 
-Wheel speeds are `L = speed·(1+curvature)` and `R = speed·(1−curvature)`, capped at `max_speed`.
-Each robot draws its path on the floor with a pen in its own colour (`trail: true` in `robot:`, or per robot in `robots:`; set `false` to disable). Ink never evaporates, so restart the simulation to clear it.
-The legacy `cruise_l` / `cruise_r` pair is still accepted and converted. Each robot logs its effective values at start (`init OK ... speed=... curvature=...`).
+Wheel speeds are calculated as follows:
 
----
+```text
+left  = cruise_speed * (1 + cruise_curvature)
+right = cruise_speed * (1 - cruise_curvature)
+```
 
-## Check that the nodes are running
+The values are capped by `max_speed`. The legacy `cruise_l` and `cruise_r`
+configuration keys are also accepted as a pair.
 
-In a second terminal:
+## ROS 2 interfaces
+
+Once the simulation is running, inspect the available nodes and topics:
 
 ```bash
 source ~/ros2_ws/install/setup.bash
@@ -181,9 +227,32 @@ ros2 node list
 ros2 topic list
 ```
 
-Expected robot nodes:
+Each robot exposes:
 
+- `/<robot_name>/cmd_vel`
+  (`geometry_msgs/msg/Twist`) — velocity commands.
+- `/<robot_name>/sensor_readings`
+  (`std_msgs/msg/Float32MultiArray`) — distance-sensor readings.
+
+Example commands:
+
+```bash
+# Move robot_0 forward
+ros2 topic pub -r 10 /robot_0/cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.05}, angular: {z: 0.0}}"
+
+# Rotate robot_0 in place
+ros2 topic pub -r 10 /robot_0/cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.0}, angular: {z: 1.0}}"
 ```
+
+The controller applies `cmd_vel_timeout` from the configuration. Stop
+publishing before that timeout expires and the robot returns to its autonomous
+behaviour.
+
+Expected controller nodes are:
+
+```text
 /robot_0/robot_0
 /robot_1/robot_1
 /robot_2/robot_2
@@ -191,46 +260,39 @@ Expected robot nodes:
 /robot_4/robot_4
 ```
 
-Topics:
+`ri_a1/controller.py` is a Webots plugin loaded by
+`webots_ros2_driver`; it is not a standalone executable. Therefore,
+`ros2 run ri_a1 controller` is not a valid way to start the controller.
 
+## Project structure
+
+```text
+RI_Assesment1/
+├── commands/                 # Build, run, and WSL2 GPU helper scripts
+├── config/config.yaml       # Runtime and per-robot configuration
+├── launch/launch.py         # Webots and controller launch description
+├── resource/
+│   ├── ri_a1                # ROS 2 package resource marker
+│   ├── robot.urdf           # Robot description and Webots plugin entry point
+│   └── ...
+├── ri_a1/
+│   ├── config.py            # Configuration loading and merging
+│   ├── controller.py        # Webots ROS 2 controller plugin
+│   └── spawn.py             # Spawn pose and world generation helpers
+├── worlds/
+│   ├── world.wbt            # Webots world
+│   └── protos/              # Custom Webots PROTO definitions
+├── package.xml
+├── setup.py
+└── setup.cfg
 ```
-/robot_0/cmd_vel
-/robot_1/cmd_vel
-...
-```
-
-### Useful commands
-
-```bash
-# Confirm all five controller connections
-for i in 0 1 2 3 4; do ros2 node list | grep -q "/robot_${i}" && echo "robot_${i}: connected"; done
-
-# View published topics
-ros2 topic list | grep robot_
-
-# Drive one robot forward
-ros2 topic pub -r 10 /robot_0/cmd_vel geometry_msgs/msg/TwistStamped \
-  "{twist: {linear: {x: 0.05}, angular: {z: 0.0}}}"
-
-# Make every robot spin on the spot
-for i in 0 1 2 3 4; do
-  ros2 topic pub -r 10 /robot_$i/cmd_vel geometry_msgs/msg/TwistStamped \
-    "{twist: {linear: {x: 0.0}, angular: {z: 1.0}}}" &
-done
-wait
-```
-
----
 
 ## Development
 
-- Python controller: `ri_a1/controller.py` (Webots plugin, called by `webots_ros2_driver`)
-- Webots world: `worlds/world.wbt`
-- URDF: `resource/robot.urdf`
-- Launch: `launch/launch.py`
-
-Because the build uses `--symlink-install`, changes to Python files, launch files, and world files are picked up without rebuilding.
-You only need to rebuild when modifying `package.xml`, `setup.py`, `entry_points`, or adding new files:
+The package uses `ament_python`. With `--symlink-install`, changes to Python,
+launch, configuration, and world files are picked up from the source tree.
+Rebuild when changing `package.xml`, `setup.py`, installation data, or adding
+new package files:
 
 ```bash
 cd ~/ros2_ws
@@ -238,22 +300,29 @@ colcon build --packages-select ri_a1 --symlink-install
 source install/setup.bash
 ```
 
----
+Useful source files:
 
-## Notes on the Webots plugin
+- [`ri_a1/controller.py`](ri_a1/controller.py)
+- [`ri_a1/config.py`](ri_a1/config.py)
+- [`ri_a1/spawn.py`](ri_a1/spawn.py)
+- [`launch/launch.py`](launch/launch.py)
+- [`resource/robot.urdf`](resource/robot.urdf)
+- [`worlds/world.wbt`](worlds/world.wbt)
 
-`controller.py` is **not** a standalone ROS 2 node — it is a plugin loaded by `webots_ros2_driver` via the `<plugin>` tag in `robot.urdf`:
+## Authors and contributors
 
-```xml
-<webots>
-  <plugin type="ri_a1.controller.Controller" />
-</webots>
-```
+Here bellow are the members of this RI Assessment 1 project :
 
-The driver instantiates one `Controller` per robot declared in the world. That is why `ros2 run ri_a1 controller` is not applicable — the plugin runs inside the Webots controller process started by the launch file.
+| LASTNAME | Firstname |
+|----------|-----------|
+| PINHEIRO | Nathan    |
+| JOHANSEN | Magnus    |
+| SANTOS   | Júlio     |
+| COLOMBU  | Jules     |
 
----
+Contributions, corrections, and documentation improvements are welcome.
 
 ## License
 
-See the [LICENSE](LICENSE) file.
+The package metadata declares the MIT license. Add the repository's
+`LICENSE` file if a distributable license text is required.
