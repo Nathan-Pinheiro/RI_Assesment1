@@ -1,14 +1,16 @@
-seed: 14
+# ri_a1 configuration
 
-# 43 => Tous bloqué, en 2 groupes
-# 44 => 4 suivent, et bloquent avec le dernier
-# 45 => 2 groupes valides
-# 46 => 3 groupes valides
-# 46 => 1 groupe valide !
+# Master seed. Launch: random spawn layout (negative = random each run).
+# Controller: each robot seeds noise with (seed + robot index).
+# Override at launch:  ros2 launch ri_a1 launch.py random_seed:=45
+seed: 18
+
+# Gaussian noise on wheel speeds (rad/s).
 noise:
   noise: true
-  strength: 10
+  strength: 0.2
 
+# Random non-overlapping spawn area.
 spawn:
   spawn_zone_x_min: -1.0
   spawn_zone_x_max:  1.0
@@ -17,19 +19,27 @@ spawn:
   min_robot_distance: 0.5
   max_placement_attempts: 1000
 
+# Default behaviour for every robot.
 robot:
-  seuil: 50
-  dist_stop: 0.05
-  dist_slow: 0.25
-  max_speed: 5.0
-  min_speed: 1.0
-  turn_gain: 1.5
-  # Vitesse moyenne des roues en ligne libre (rad/s)
+  # Obstacle detection
+  seuil: 50          # sensor threshold (0-1024); below = nothing seen
+  dist_stop: 0.05    # <= this (m): spin in place (-1.5 / +1.5 rad/s)
+  dist_slow: 0.25    # below this (m): slow down linearly; beyond: max_speed
+
+  # Speeds
+  max_speed: 15.0         # per-wheel cap (rad/s)
+  min_speed: 1.0         # floor while slowing (never below 0.3 * min_speed)
+  turn_gain: 1.5         # wheel diff = turn_gain * turn * speed
+  reverse_turn: false    # invert avoidance steering
+
+  # Free-path cruising: L = cruise_speed*(1+c), R = cruise_speed*(1-c), capped
   cruise_speed: 3.75
-  # Courbure de base, (L-R)/(L+R) : >0 = tourne à droite, <0 = à gauche, 0 = droit
-  cruise_curvature: 0.0667
-  reverse_turn: false
+  cruise_curvature: 0.0667   # >0 right, <0 left, 0 straight
+
+  # Distance sensors
   sensor_angles_deg: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+
+  # Calibration: [distance m, raw reading], linearly interpolated.
   lookup:
     - [0.0,  1024]
     - [0.05, 1000]
@@ -39,11 +49,10 @@ robot:
     - [3.0,  120]
     - [4.0,  0]
 
-# Surcharges par robot (optionnel). Seules les clés listées sont remplacées ;
-# les robots absents utilisent les valeurs de robot: ci-dessus.
+# Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:
-  robot_0: { cruise_speed: 10.0, cruise_curvature:  0.60 }
-  robot_1: { cruise_speed: 8.0, cruise_curvature:  0.50 }
-  robot_2: { cruise_speed: 4.0, cruise_curvature: -0.30 }
-  robot_3: { cruise_speed: 2.5, cruise_curvature:  0.10 }
-  robot_4: { cruise_speed: 2.5, cruise_curvature: -0.60 }
+  robot_0: { cruise_speed: 10.0, cruise_curvature: 0.05  }
+  robot_1: { cruise_speed:  8.0, cruise_curvature: 0.06   }
+  robot_2: { cruise_speed:  6.0, cruise_curvature: 0.07  }
+  robot_3: { cruise_speed:  4.0, cruise_curvature: -0.05  }
+  robot_4: { cruise_speed:  2.0, cruise_curvature: -0.06 }

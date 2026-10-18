@@ -1,7 +1,6 @@
 import sys
 import math
 import random
-import numpy as np
 
 from ri_a1.config import load_config
 
@@ -53,6 +52,16 @@ def _normalize_layer(layer, label):
 def build_robot_config(cfg_full, name):
     """DEFAULTS < robot: < robots[name]."""
     cfg = dict(DEFAULTS)
+    # top-level `seed:` and `noise:` sections of config.yaml
+    if 'seed' in cfg_full:
+        cfg['seed'] = cfg_full['seed']
+    noise = cfg_full.get('noise')
+    if isinstance(noise, dict):
+        for k in ('noise', 'strength'):
+            if k in noise:
+                cfg[k] = noise[k]
+    elif noise is not None:
+        cfg['noise'] = noise
     per_robot = (cfg_full.get('robots') or {}).get(name)
     if per_robot is None and cfg_full.get('robots'):
         print(f'[{name}] pas de section dans robots:, valeurs par défaut',
@@ -102,7 +111,7 @@ class MyRobotDriver:
                 robot_index = int(self.__name.rsplit('_', 1)[1])
             except ValueError:
                 robot_index = 0
-        random.seed(self.SEED + robot_index)
+        self.__rng = random.Random(self.SEED + robot_index)
 
         self.__left_motor = self.__robot.getDevice('left wheel motor')
         self.__right_motor = self.__robot.getDevice('right wheel motor')
@@ -136,11 +145,12 @@ class MyRobotDriver:
 
     def __set(self, l, r):
         if self.noise:
-            l += np.random.normal(0, self.noise_s)
-            r += np.random.normal(0, self.noise_s)
+            l += self.__rng.gauss(0.0, self.noise_s)
+            r += self.__rng.gauss(0.0, self.noise_s)
 
-        self.__left_motor.setVelocity(l)
-        self.__right_motor.setVelocity(r)
+        m = self.MAX_SPEED
+        self.__left_motor.setVelocity(max(-m, min(m, l)))
+        self.__right_motor.setVelocity(max(-m, min(m, r)))
 
     def __reading_to_distance(self, v):
         if v <= 0:

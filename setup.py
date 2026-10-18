@@ -15,7 +15,6 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'resource'), glob('resource/*')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*.wbt')),
-        (os.path.join('share', package_name, 'worlds'), glob('worlds/*.wbt')),
         (os.path.join('share', package_name, 'worlds', 'protos'), glob('worlds/protos/*.proto')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml') + glob('config/*.yml')),
     ],
@@ -25,9 +24,4 @@ setup(
     maintainer_email='user@example.com',
     description='Multi-robot Webots simulation with ROS 2',
     license='MIT',
-    entry_points={
-        'console_scripts': [
-            'controller = ri_a1.controller:main',
-        ],
-    },
 )
