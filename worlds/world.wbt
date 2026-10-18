@@ -22,35 +22,35 @@ Floor {
   size 6 6 
   }
 
-TricycleRobot {
+DEF ROBOT_0 TricycleRobot {
   translation 0 0 0.021
   rotation 0 0 1 0
   name "robot_0"
   color 1 0 0
 }
 
-TricycleRobot {
+DEF ROBOT_1 TricycleRobot {
   translation 0.8 0.8 0.021
   rotation 0 0 1 0
   name "robot_1"
   color 0 1 0
 }
 
-TricycleRobot {
+DEF ROBOT_2 TricycleRobot {
   translation -0.8 0.8 0.021
   rotation 0 0 1 0
   name "robot_2"
   color 0 0 1
 }
 
-TricycleRobot {
+DEF ROBOT_3 TricycleRobot {
   translation -0.8 -0.8 0.021
   rotation 0 0 1 0
   name "robot_3"
   color 1 1 0
 }
 
-TricycleRobot {
+DEF ROBOT_4 TricycleRobot {
   translation 0.8 -0.8 0.021
   rotation 0 0 1 0
   name "robot_4"

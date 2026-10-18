@@ -3,12 +3,7 @@
 # Master seed. Launch: random spawn layout (negative = random each run).
 # Controller: each robot seeds noise with (seed + robot index).
 # Override at launch:  ros2 launch ri_a1 launch.py random_seed:=45
-seed: 22
-
-# Gaussian noise on wheel speeds (rad/s).
-noise:
-  noise: true
-  strength: 0.2
+seed: 18
 
 # Random non-overlapping spawn area.
 spawn:
@@ -50,9 +45,11 @@ robot:
     - [2.0,  300]
     - [3.0,  120]
     - [4.0,  0]
-  wheel_noise: true
-  lidar_noise: true
-  strength: 0.2 # noise varians
+
+# Gaussian noise on wheel speeds (rad/s), and LiDAR sesnor.
+  wheel_noise: false
+  lidar_noise: false
+  strength: 0.2    # Standar deviation
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:

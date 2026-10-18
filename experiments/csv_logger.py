@@ -35,7 +35,9 @@ class CSVLogger(Node):
             "following",
             "angular_error",
             "target_losses",
-            "collision_avoidance"
+            "collision_avoidance",
+            "x",
+            "y"
         ])
 
         self.subscriptions_list = []
@@ -56,7 +58,7 @@ class CSVLogger(Node):
 
     def wheel_callback(self, msg, robot_id):
 
-        if len(msg.data) < 7:
+        if len(msg.data) < 9:
             return
 
         self.writer.writerow([
@@ -69,7 +71,9 @@ class CSVLogger(Node):
             int(msg.data[3]),    # Following
             msg.data[4],         # Angular error
             int(msg.data[5]),    # Target losses
-            int(msg.data[6])     # Collision avoidance
+            int(msg.data[6]),    # Collision avoidance
+            msg.data[7],         # X position
+            msg.data[8]          # Y position
         ])
 
         self.file.flush()

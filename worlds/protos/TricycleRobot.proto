@@ -70,6 +70,7 @@ PROTO TricycleRobot [
         physics Physics { density -1 mass 0.005 }
       }
 
+      GPS { name "gps" }
       DistanceSensor { translation 0.0334 -0.0398 0 rotation 0 0 1 -0.873 name "ds_0"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
       DistanceSensor { translation 0.0398 -0.0334 0 rotation 0 0 1 -0.698 name "ds_1"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }
       DistanceSensor { translation 0.0450 -0.0260 0 rotation 0 0 1 -0.524 name "ds_2"  type "generic" lookupTable [ 0 1024 0  0.05 1000 0  0.5 800 0  1.0 600 0  2.0 300 0  3.0 120 0  4.0 0 0 ] }

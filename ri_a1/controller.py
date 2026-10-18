@@ -135,6 +135,8 @@ class MyRobotDriver:
 
         self.__robot = webots_node.robot
         self.__name = self.__robot.getName()
+        self.gps = self.__robot.getDevice("gps")
+        self.gps.enable(32)
 
         self.__node, self.__owns_node = _acquire_ros_node(webots_node, self.__name)
 
@@ -283,7 +285,9 @@ class MyRobotDriver:
                 float(self.following),
                 float(self.angular_error),
                 float(self.target_losses),
-                float(self.near_collision_count)
+                float(self.near_collision_count),
+                self.__gps_x,
+                self.__gps_y
             ]
 
             self.__wheel_pub.publish(msg)
@@ -307,6 +311,10 @@ class MyRobotDriver:
     def step(self):
         if not self.__ready:
             return
+
+        position = self.gps.getValues()
+        self.__gps_x = float(position[0])
+        self.__gps_y = float(position[1])
 
         if self.__owns_node and self.__node is not None:
             try:
