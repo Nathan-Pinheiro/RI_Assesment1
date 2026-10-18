@@ -4,6 +4,8 @@ import random
 import time
 import atexit
 
+import numpy as np
+
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 
@@ -11,9 +13,9 @@ from ri_a1.config import load_config
 
 
 DEFAULTS = {
-    'wheel_noise': False, # Gaussian noise wheels
-    'lidar_noise': False, # Gaussian noise lidar
-    'strength': 0.6, # Varians
+    'wheel_noise': False,
+    'lidar_noise': False,
+    'strength': 0.6,
 
     'seed': 43,
     'seuil': 50,
@@ -63,11 +65,9 @@ def build_robot_config(cfg_full, name):
         cfg['seed'] = cfg_full['seed']
     noise = cfg_full.get('noise')
     if isinstance(noise, dict):
-        for k in ('noise', 'strength'):
+        for k in ('wheel_noise', 'lidar_noise', 'strength'):
             if k in noise:
                 cfg[k] = noise[k]
-    elif noise is not None:
-        cfg['noise'] = noise
     per_robot = (cfg_full.get('robots') or {}).get(name)
     if per_robot is None and cfg_full.get('robots'):
         print(f'[{name}] pas de section dans robots:, valeurs par défaut',
@@ -212,6 +212,8 @@ class MyRobotDriver:
               f'speed={self.CRUISE_SPEED:.2f}, '
               f'curvature={self.CRUISE_CURVATURE:+.3f}, '
               f'L={self.CRUISE_L:.2f}, R={self.CRUISE_R:.2f}, '
+              f'wheel_noise={self.wheel_noise}, '
+              f'lidar_noise={self.lidar_noise}, '
               f'cmd_vel_timeout={self.CMD_VEL_TIMEOUT:.1f}s wall)',
               file=sys.stderr, flush=True)
 
@@ -245,7 +247,7 @@ class MyRobotDriver:
         self.__last_cmd_time = time.monotonic()
 
     def __set(self, l, r):
-        if self.noise:
+        if self.wheel_noise:
             l += self.__rng.gauss(0.0, self.noise_s)
             r += self.__rng.gauss(0.0, self.noise_s)
         m = self.MAX_SPEED
@@ -262,11 +264,10 @@ class MyRobotDriver:
                 if v1 == v2:
                     return d1
                 t = (v1 - v) / (v1 - v2)
-
+                d = d1 + t * (d2 - d1)
                 if self.lidar_noise:
-                    return (d1 + t * (d2 - d1)) + np.random.normal(0, self.noise_s)
-                
-                return d1 + t * (d2 - d1)
+                    d += float(np.random.normal(0.0, self.noise_s))
+                return d
         return 4.0
 
     def step(self):
@@ -309,7 +310,6 @@ class MyRobotDriver:
         else:
             speed = self.MAX_SPEED
 
-        # Nearest target: strongest sensor gives its bearing (sensor angle)
         nearest = d.index(max_d)
         bearing = math.radians(self.SENSOR_ANGLES_DEG[nearest])
         turn = math.sin(bearing)

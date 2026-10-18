@@ -3,7 +3,7 @@
 # Master seed. Launch: random spawn layout (negative = random each run).
 # Controller: each robot seeds noise with (seed + robot index).
 # Override at launch:  ros2 launch ri_a1 launch.py random_seed:=45
-seed: 18
+seed: 22
 
 # Gaussian noise on wheel speeds (rad/s).
 noise:
