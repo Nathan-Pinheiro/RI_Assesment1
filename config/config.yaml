@@ -1,14 +1,10 @@
-seed: 42
+seed: 39
 
 # 43 => Tous bloqué, en 2 groupes
 # 44 => 4 suivent, et bloquent avec le dernier
 # 45 => 2 groupes valides
 # 46 => 3 groupes valides
 # 46 => 1 groupe valide !
-noise:
-  wheel_noise: true
-  lidar_noise: true
-  strength: 10
 
 spawn:
   spawn_zone_x_min: -0.7
@@ -39,6 +35,9 @@ robot:
     - [2.0,  300]
     - [3.0,  120]
     - [4.0,  0]
+  wheel_noise: false
+  lidar_noise: false
+  strength: 0.5
 
 # Surcharges par robot (optionnel). Seules les clés listées sont remplacées ;
 # les robots absents utilisent les valeurs de robot: ci-dessus.

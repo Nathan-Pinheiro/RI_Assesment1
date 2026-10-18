@@ -7,8 +7,8 @@ from ri_a1.config import load_config
 
 
 DEFAULTS = {
-    'wheel_noise': True, # Gaussian noise wheels
-    'lidar_noise': True, # Gaussian noise lidar
+    'wheel_noise': False, # Gaussian noise wheels
+    'lidar_noise': False, # Gaussian noise lidar
     'strength': 0.6, # Varians
 
     'seed': 43,
@@ -154,6 +154,7 @@ class MyRobotDriver:
 
                 if self.lidar_noise:
                     return (d1 + t * (d2 - d1)) + np.random.normal(0, self.noise_s)
+                
                 return d1 + t * (d2 - d1)
         return 4.0
 
