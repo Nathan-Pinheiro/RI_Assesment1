@@ -39,6 +39,8 @@ robot:
   # Distance sensors
   sensor_angles_deg: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
 
+  cmd_vel_timeout: 1.0
+
   # Calibration: [distance m, raw reading], linearly interpolated.
   lookup:
     - [0.0,  1024]
