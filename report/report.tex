@@ -11,13 +11,13 @@
 \usepackage{cite}
 \usepackage{siunitx}
 
-% --- Titre et auteurs ---
-\title{Reactive Following with Five Differential-Drive Robots in Webots and ROS~2}
+% --- Title and authors ---
+\title{Reactive Following with Five Tricycle Robots in Webots and ROS~2}
 
 \author{
-\IEEEauthorblockN{??? Magnus, ??? Julio, COLOMBU Jules, PINHEIRO Nathan}
+\IEEEauthorblockN{JOHANSEN Magnus, SANTOS Júlio, COLOMBU Jules, PINHEIRO Nathan}
 \IEEEauthorblockA{
-Faculdade de Engenharia da Universidade do Porto (FEUP)\\
+Faculty of Engineering of the University of Porto (FEUP)\\
 Porto, Portugal\\
 \{email1, email2, email3, email4\}@fe.up.pt % TODO
 }
@@ -38,7 +38,7 @@ it resumes its own base curve. The controller uses only the current local
 sensor readings: no global localisation, no target memory. We describe
 the architecture, the controller and its parameters, and we evaluate the
 behaviour over several randomised initial conditions.
-% [TODO] One sentence with the main quantitative result,
+% [TODO] Add one sentence with the main quantitative result,
 % e.g. mean following duration and number of collisions.
 \end{abstract}
 
@@ -81,13 +81,71 @@ conclude.
 \section{System Architecture}
 
 \subsection{Simulation Environment}
-% [TODO] Description de l'environnement Webots, dimensions, seed, génération aléatoire.
+% [TODO] Describe the Webots environment, dimensions, seed, and random generation.
+
+\begin{table}[t]
+    \centering
+    \caption{Simulation environment metrics extracted from the project.}
+    \label{tab:environment}
+    \begin{tabular}{lll}
+        \toprule
+        Metric & Value & Source \\
+        \midrule
+        Webots version & R2025a & World header \\
+        Arena dimensions & $6 \times 6$ m & Floor definition \\
+        Arena area & \SI{36}{m^2} & Derived \\
+        Basic time step & \SI{32}{ms} & World definition \\
+        Controller update rate & \SI{31.25}{Hz} & Derived \\
+        Robots & 5 & Launch configuration \\
+        Spawn zone & $1.4 \times 1.4$ m & YAML configuration \\
+        Minimum spawn distance & \SI{0.5}{m} & YAML configuration \\
+        Placement attempts / robot & 1000 & YAML configuration \\
+        Default random seed & 18 & YAML configuration \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{Robot Model}
-% [TODO] Description du PROTO, dimensions, capteurs, actionneurs.
+% [TODO] Describe the PROTO, dimensions, sensors, and actuators.
+
+\begin{table}[t]
+    \centering
+    \caption{Robot model metrics extracted from the PROTO definition.}
+    \label{tab:robot}
+    \begin{tabular}{lll}
+        \toprule
+        Metric & Value & Source \\
+        \midrule
+        Body dimensions & $0.08 \times 0.06 \times 0.03$ m & PROTO geometry \\
+        Wheel radius & \SI{0.02}{m} & PROTO geometry \\
+        Wheel centre offset & \SI{0.035}{m} & PROTO joints \\
+        Distance sensors & 11 & PROTO definition \\
+        Sensor field of view & $100^{\circ}$ & Sensor angles \\
+        Sensor range & \SI{4}{m} & Lookup table \\
+        Motor maximum velocity & \SI{20}{rad/s} & Motor definition \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \subsection{ROS~2 Integration}
-% [TODO] Launch file, namespaces, plugin Python, YAML de paramètres.
+% [TODO] Describe the launch file, namespaces, Python plugin, and YAML parameters.
+
+\begin{table}[t]
+    \centering
+    \caption{ROS~2 integration metrics.}
+    \label{tab:ros}
+    \begin{tabular}{ll}
+        \toprule
+        Metric & Value \\
+        \midrule
+        Package type & \texttt{ament\_python} \\
+        Controller instances & 5 \\
+        Command topic type & \texttt{geometry\_msgs/msg/Twist} \\
+        Sensor topic type & \texttt{std\_msgs/msg/Float32MultiArray} \\
+        Command timeout & \SI{1.0}{s} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \begin{figure}[t]
     \centering
@@ -98,10 +156,10 @@ conclude.
 
 % ============================================================
 \section{Reactive Controller}
-% [TODO] Introduction : contrôleur sans état, trois situations.
+% [TODO] Introduce the stateless controller and its three situations.
 
 \subsection{Cruise Behaviour}
-% [TODO] Comportement de croisière, formule de courbure.
+% [TODO] Describe the cruise behaviour and curvature formula.
 \begin{equation}
 \begin{aligned}
 \omega_{L} &= \min\!\bigl(\omega_{\max},\, s_{k}(1 + \kappa_{k})\bigr),\\
@@ -109,10 +167,10 @@ conclude.
 \end{aligned}
 \label{eq:cruise}
 \end{equation}
-% [TODO] Signification de kappa > 0, kappa < 0, kappa = 0.
+% [TODO] Explain the meaning of kappa > 0, kappa < 0, and kappa = 0.
 
 \subsection{Detection and Following}
-% [TODO] Seuil de détection, estimation de distance, inversion du LUT.
+% [TODO] Describe the detection threshold, distance estimation, and lookup-table inversion.
 \begin{equation}
 s(\rho) =
 \begin{cases}
@@ -122,7 +180,7 @@ s(\rho) =
 \end{cases}
 \label{eq:speed}
 \end{equation}
-% [TODO] Loi de direction (somme pondérée des capteurs).
+% [TODO] Describe the steering law (weighted sum of sensor readings).
 \begin{equation}
 \begin{aligned}
 u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi_i,\; -1,\; 1\Bigr),\\
@@ -134,7 +192,7 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
 \end{equation}
 
 \subsection{Parameters}
-% [TODO] Description des paramètres (Tables~\ref{tab:params} et~\ref{tab:cruise}).
+% [TODO] Describe the parameters (Tables~\ref{tab:params} and~\ref{tab:cruise}).
 
 \begin{table}[t]
     \centering
@@ -147,7 +205,7 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
         $\theta$        & detection threshold (reading) & 50 \\
         $\rho_{\text{stop}}$ & stop distance          & \SI{0.05}{m} \\
         $\rho_{\text{slow}}$ & slow-down distance     & \SI{0.25}{m} \\
-        $\omega_{\max},\ \omega_{\min}$ & wheel speed limits & 5, 1~rad/s \\
+        $\omega_{\max},\ \omega_{\min}$ & wheel speed limits & 15, 1~rad/s \\
         $g$             & turning gain                   & 1.5 \\
         $s_k,\ \kappa_k$ & cruise speed / curvature      & Table~\ref{tab:cruise} \\
         \bottomrule
@@ -162,11 +220,11 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
         \toprule
         Robot & $s_k$ & $\kappa_k$ & $\omega_L$ & $\omega_R$ & $v$ (m/s) & $\rho_c$ (m) \\
         \midrule
-        robot\_0 & 10.0 & $+0.60$ & 5.00 & 4.00 & 0.090 & 0.315 \\
-        robot\_1 &  8.0 & $+0.50$ & 5.00 & 4.00 & 0.090 & 0.315 \\
-        robot\_2 &  4.0 & $-0.30$ & 2.80 & 5.00 & 0.078 & 0.124 \\
-        robot\_3 &  2.5 & $+0.10$ & 2.75 & 2.25 & 0.050 & 0.350 \\
-        robot\_4 &  2.5 & $-0.60$ & 1.00 & 4.00 & 0.050 & 0.058 \\
+        robot\_0 & 10.0 & $+0.05$ & 10.50 & 9.50 & 0.200 & 0.700 \\
+        robot\_1 &  8.0 & $+0.06$ &  8.48 & 7.52 & 0.160 & 0.583 \\
+        robot\_2 &  6.0 & $+0.07$ &  6.42 & 5.58 & 0.120 & 0.500 \\
+        robot\_3 &  4.0 & $-0.05$ &  3.80 & 4.20 & 0.080 & 0.700 \\
+        robot\_4 &  2.0 & $-0.06$ &  1.88 & 2.12 & 0.040 & 1.167 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -175,7 +233,29 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
 \section{Experiments and Results}
 
 \subsection{Protocol}
-% [TODO] Trois conditions, seeds, durée, métriques.
+% [TODO] Define the three conditions, duration, and metrics.
+% Record every additional seed used for evaluation in Table~\ref{tab:seeds}.
+
+The default configuration uses seed~18. This seed determines the
+non-overlapping initial poses and, together with the robot index, the
+controller noise sequence. It should therefore be reported for every
+reproducibility run. A different seed can be selected at launch with
+\texttt{random\_seed:=<value>}; all seeds used in the experiments must be
+recorded explicitly in Table~\ref{tab:seeds}.
+
+\begin{table}[t]
+    \centering
+    \caption{Seed protocol used for the experiments.}
+    \label{tab:seed-protocol}
+    \begin{tabular}{lll}
+        \toprule
+        Seed & Role & Status \\
+        \midrule
+        18 & Default and reproducibility baseline & Configured \\
+        -- & Additional evaluation seeds & To be recorded \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \begin{table}[t]
     \centering
@@ -194,20 +274,20 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
 \end{table}
 
 \subsection{Quantitative Results}
-% [TODO] Résumé quantitatif (Table~\ref{tab:results}).
+% [TODO] Add the quantitative summary (Table~\ref{tab:results}).
 
 \subsection{Qualitative Observations}
-% [TODO] Observations qualitatives, plusieurs seeds.
+% [TODO] Add qualitative observations for several seeds.
 
 \begin{table}[t]
     \centering
-    \caption{Preliminary outcomes observed for different seeds.}
+    \caption{Outcomes to be recorded for each evaluated seed.}
     \label{tab:seeds}
     \begin{tabular}{ll}
         \toprule
         Seed & Observed outcome \\
         \midrule
-        -- & -- \\
+        18 & -- \\
         -- & -- \\
         -- & -- \\
         \bottomrule
@@ -223,23 +303,23 @@ u &= \operatorname{clip}\!\Bigl(\sum_{i:\,d_i > \theta} \frac{d_i}{1024}\sin\phi
 
 % ============================================================
 \section{Discussion}
-% [TODO] Chaînes et groupes.
-% [TODO] Modes d'échec.
-% [TODO] Effets des paramètres.
+% [TODO] Discuss chains and groups.
+% [TODO] Discuss failure modes.
+% [TODO] Discuss parameter effects.
 
 % ============================================================
 \section{Conclusions and Limitations}
-% [TODO] Rappel de la contribution.
-% [TODO] Limites principales.
-% [TODO] Extensions naturelles.
+% [TODO] Recall the contribution.
+% [TODO] Discuss the main limitations.
+% [TODO] Describe natural extensions.
 
 % ============================================================
 \section*{Code and Video}
-% [TODO] Code : URL du dépôt. Vidéo de démonstration : lien.
+% [TODO] Add the code repository URL and demonstration video link.
 
 % ============================================================
 \section*{Author Contributions}
-% [TODO] Une ligne par auteur décrivant sa contribution.
+% [TODO] Add one line per author describing their contribution.
 
 % ============================================================
 \nocite{*}
