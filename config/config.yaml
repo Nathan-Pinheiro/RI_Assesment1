@@ -50,9 +50,9 @@ robot:
     - [2.0,  300]
     - [3.0,  120]
     - [4.0,  0]
-  wheel_noise: false
-  lidar_noise: false
-  strength: 0.5
+  wheel_noise: true
+  lidar_noise: true
+  strength: 0.2 # noise varians
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:
