@@ -12,10 +12,10 @@ noise:
 
 # Random non-overlapping spawn area.
 spawn:
-  spawn_zone_x_min: -1.0
-  spawn_zone_x_max:  1.0
-  spawn_zone_y_min: -1.0
-  spawn_zone_y_max:  1.0
+  spawn_zone_x_min: -0.7
+  spawn_zone_x_max:  0.7
+  spawn_zone_y_min: -0.7
+  spawn_zone_y_max:  0.7
   min_robot_distance: 0.5
   max_placement_attempts: 1000
 
@@ -50,6 +50,9 @@ robot:
     - [2.0,  300]
     - [3.0,  120]
     - [4.0,  0]
+  wheel_noise: false
+  lidar_noise: false
+  strength: 0.5
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:

@@ -11,8 +11,10 @@ from ri_a1.config import load_config
 
 
 DEFAULTS = {
-    'noise': True,
-    'strength': 0.2,
+    'wheel_noise': False, # Gaussian noise wheels
+    'lidar_noise': False, # Gaussian noise lidar
+    'strength': 0.6, # Varians
+
     'seed': 43,
     'seuil': 50,
     'dist_stop': 0.1,
@@ -129,17 +131,20 @@ class MyRobotDriver:
         self.__node, self.__owns_node = _acquire_ros_node(webots_node, self.__name)
 
         cfg = build_robot_config(load_config(), self.__name)
-        self.noise      = bool(cfg["noise"])
-        self.noise_s    = float(cfg["strength"])
-        self.SEED       = int(cfg['seed'])
-        self.SEUIL      = int(cfg['seuil'])
-        self.DIST_STOP  = float(cfg['dist_stop'])
-        self.DIST_SLOW  = float(cfg['dist_slow'])
-        self.MAX_SPEED  = float(cfg['max_speed'])
-        self.MIN_SPEED  = float(cfg['min_speed'])
-        self.TURN_GAIN  = float(cfg['turn_gain'])
-        self.CRUISE_SPEED     = float(cfg['cruise_speed'])
-        self.CRUISE_CURVATURE = float(cfg['cruise_curvature'])
+
+        self.wheel_noise = bool(cfg["wheel_noise"])
+        self.lidar_noise = bool(cfg["lidar_noise"])
+        self.noise_s = float(cfg["strength"])
+
+        self.SEED              = int(cfg['seed'])
+        self.SEUIL             = int(cfg['seuil'])
+        self.DIST_STOP         = float(cfg['dist_stop'])
+        self.DIST_SLOW         = float(cfg['dist_slow'])
+        self.MAX_SPEED         = float(cfg['max_speed'])
+        self.MIN_SPEED         = float(cfg['min_speed'])
+        self.TURN_GAIN         = float(cfg['turn_gain'])
+        self.CRUISE_SPEED      = float(cfg['cruise_speed'])
+        self.CRUISE_CURVATURE  = float(cfg['cruise_curvature'])
         self.CRUISE_L = min(self.MAX_SPEED,
                             self.CRUISE_SPEED * (1.0 + self.CRUISE_CURVATURE))
         self.CRUISE_R = min(self.MAX_SPEED,
@@ -257,6 +262,10 @@ class MyRobotDriver:
                 if v1 == v2:
                     return d1
                 t = (v1 - v) / (v1 - v2)
+
+                if self.lidar_noise:
+                    return (d1 + t * (d2 - d1)) + np.random.normal(0, self.noise_s)
+                
                 return d1 + t * (d2 - d1)
         return 4.0
 
@@ -300,11 +309,10 @@ class MyRobotDriver:
         else:
             speed = self.MAX_SPEED
 
-        turn = 0.0
-        for i, di in enumerate(d):
-            if di > self.SEUIL:
-                turn += (di / 1024.0) * self.__sin_angles[i]
-        turn = max(-1.0, min(1.0, turn))
+        # Nearest target: strongest sensor gives its bearing (sensor angle)
+        nearest = d.index(max_d)
+        bearing = math.radians(self.SENSOR_ANGLES_DEG[nearest])
+        turn = math.sin(bearing)
 
         diff = self.TURN_GAIN * turn * speed
         if self.REVERSE_TURN:
