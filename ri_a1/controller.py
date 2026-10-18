@@ -15,7 +15,7 @@ from ri_a1.config import load_config
 DEFAULTS = {
     'wheel_noise': False,
     'lidar_noise': False,
-    'strength': 0.6,
+    'strength': 0.2,
 
     'seed': 43,
     'seuil': 50,
@@ -116,6 +116,7 @@ class MyRobotDriver:
     def init(self, webots_node, properties):
         self.__sensor_pub = None
         self.__cmd_sub = None
+        self.__wheel_pub = None
         self.__sensors = []
         self.__last_cmd_time = -1e9
         self.__cmd_left  = 0.0
@@ -124,6 +125,13 @@ class MyRobotDriver:
         self.__owns_node = False
         self.__spin_warned = False
         self.__shutdown_registered = False
+
+        self.following = False
+        self.angular_error = float("nan")
+        self.target_losses = 0
+        self.previous_following = False
+        self.near_collision_count = 0
+        self.previous_near_collision = False
 
         self.__robot = webots_node.robot
         self.__name = self.__robot.getName()
@@ -169,6 +177,12 @@ class MyRobotDriver:
                 self.__sensor_pub = self.__node.create_publisher(
                     Float32MultiArray,
                     f'/{self.__name}/sensor_readings', 10)
+                
+                self.__wheel_pub = self.__node.create_publisher(
+                    Float32MultiArray,
+                    f'/{self.__name}/wheel_speeds',
+                    10
+                )
                 self.__cmd_sub = self.__node.create_subscription(
                     Twist, f'/{self.__name}/cmd_vel',
                     self.__on_cmd_vel, 10)
@@ -248,11 +262,31 @@ class MyRobotDriver:
 
     def __set(self, l, r):
         if self.wheel_noise:
-            l += self.__rng.gauss(0.0, self.noise_s)
-            r += self.__rng.gauss(0.0, self.noise_s)
+            l += float(np.random.normal(0.0, self.noise_s))
+            r += float(np.random.normal(0.0, self.noise_s))
         m = self.MAX_SPEED
-        self.__left_motor.setVelocity(max(-m, min(m, l)))
-        self.__right_motor.setVelocity(max(-m, min(m, r)))
+
+        left_speed = max(-m, min(m, l))
+        right_speed = max(-m, min(m, r))
+
+        self.__left_motor.setVelocity(left_speed)
+        self.__right_motor.setVelocity(right_speed)
+
+        # Publish wheel commands for logging
+        if self.__wheel_pub is not None:
+            msg = Float32MultiArray()
+
+            msg.data = [
+                float(self.__robot.getTime()),
+                float(left_speed),
+                float(right_speed),
+                float(self.following),
+                float(self.angular_error),
+                float(self.target_losses),
+                float(self.near_collision_count)
+            ]
+
+            self.__wheel_pub.publish(msg)
 
     def __reading_to_distance(self, v):
         if v <= 0:
@@ -287,20 +321,49 @@ class MyRobotDriver:
         d = [s.getValue() for s in self.__sensors]
         max_d = max(d) if d else 0
 
+        # 1. Following state
+        self.following = max_d >= self.SEUIL
+
+        # 2. Angular error
+        if self.following:
+            nearest = d.index(max_d)
+
+            self.angular_error = abs(
+                self.SENSOR_ANGLES_DEG[nearest]
+            )
+        else:
+            self.angular_error = float("nan")
+
+        # 3. Target losses
+        if self.previous_following and not self.following:
+            self.target_losses += 1
+
+        # Store state for next timestep
+        self.previous_following = self.following
+
         if self.__sensor_pub is not None:
             msg = Float32MultiArray()
             msg.data = [float(x) for x in d]
             self.__sensor_pub.publish(msg)
 
         if time.monotonic() - self.__last_cmd_time < self.CMD_VEL_TIMEOUT:
+            self.previous_near_collision = False
             self.__set(self.__cmd_left, self.__cmd_right)
             return
 
         if max_d < self.SEUIL:
+            self.previous_near_collision = False
             self.__set(self.CRUISE_L, self.CRUISE_R)
             return
 
         dist = self.__reading_to_distance(max_d)
+
+        # Collision logging
+        near_collision = dist <= self.DIST_STOP
+        if near_collision and not self.previous_near_collision:
+            self.near_collision_count += 1
+        self.previous_near_collision = near_collision
+
         if dist <= self.DIST_STOP:
             self.__set(-2, 2)
             return
