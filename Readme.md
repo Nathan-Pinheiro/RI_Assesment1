@@ -309,20 +309,13 @@ Useful source files:
 - [`resource/robot.urdf`](resource/robot.urdf)
 - [`worlds/world.wbt`](worlds/world.wbt)
 
-## Authors and contributors
+## Authors and contributions
 
 Here bellow are the members of this RI Assessment 1 project :
 
-| LASTNAME | Firstname |
-|----------|-----------|
-| PINHEIRO | Nathan    |
-| JOHANSEN | Magnus    |
-| SANTOS   | Júlio     |
-| COLOMBU  | Jules     |
-
-Contributions, corrections, and documentation improvements are welcome.
-
-## License
-
-The package metadata declares the MIT license. Add the repository's
-`LICENSE` file if a distributable license text is required.
+| LASTNAME | Firstname | Contributions
+|----------|-----------|--------------
+| PINHEIRO | Nathan    | Initialization of the ROS 2 project, creation of the robot models, implementation of basic locomotion (curvature and turning), and some writing in the article.
+| JOHANSEN | Magnus    | Implementation of LiDAR and wheel noise, data logging and analysis, result visualization, and some writing in the article.
+| SANTOS   | Júlio     | Contributed to locomation logic, ensuring speed and curvature for each robot. Also contributed to the article in some sections and edit the video
+| COLOMBU  | Jules     | Setup of the project and of the simulation principles, implementation of the basics for controller/yaml/world, formating the readme
