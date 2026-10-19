@@ -5,11 +5,6 @@
 # Override at launch:  ros2 launch ri_a1 launch.py random_seed:=45
 seed: 22
 
-# Gaussian noise on wheel speeds (rad/s).
-noise:
-  noise: true
-  strength: 0.2
-
 # Random non-overlapping spawn area.
 spawn:
   spawn_zone_x_min: -0.7
@@ -54,7 +49,7 @@ robot:
     - [4.0,  0]
   wheel_noise: true
   lidar_noise: true
-  strength: 0.2 # noise varians
+  strength: 0.015 # noise varians
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:
