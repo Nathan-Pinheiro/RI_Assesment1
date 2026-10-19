@@ -80,6 +80,7 @@ def _launch_with_random_spawn(context):
         world=generated,
         mode=LaunchConfiguration('mode'),
         gui=LaunchConfiguration('gui').perform(context).lower() != 'false',
+        ros2_supervisor=True,
     )
 
     # All controllers are declared in the same LaunchDescription, so ROS 2
@@ -102,5 +103,13 @@ def _launch_with_random_spawn(context):
         except OSError:
             pass
 
-    return [webots, *controllers,
-            RegisterEventHandler(OnShutdown(on_shutdown=_cleanup))]
+        return []
+
+    return [
+        webots,
+        webots._supervisor,
+        *controllers,
+        RegisterEventHandler(
+            event_handler=OnShutdown(on_shutdown=[OpaqueFunction(function=_cleanup)])
+        ),
+    ]

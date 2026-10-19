@@ -1,0 +1,80 @@
+# ============================================================
+# EXPERIMENT 1 — FOLLOWING PERFORMANCE
+# ============================================================
+
+# MANUAL CONFIGURATIOBN IN /config/config.yaml
+
+# ---------------- SEED 18 ----------------
+
+# 1. No following
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following off --gain 0 --noise 0 --source none --avoidance off
+
+# 2. Weak turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 0.5 --noise 0 --source none --avoidance on
+
+# 3. Strong turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 1.5 --noise 0 --source none --avoidance on
+
+
+# ---------------- SEED 19 ----------------
+
+# 4. No following
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following off --gain 0 --noise 0 --source none --avoidance off
+
+# 5. Weak turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following on --gain 0.5 --noise 0 --source none --avoidance on
+
+# 6. Strong turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following on --gain 1.5 --noise 0 --source none --avoidance on
+
+
+# ---------------- SEED 20 ----------------
+
+# 7. No following
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following off --gain 0 --noise 0 --source none --avoidance off
+
+# 8. Weak turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following on --gain 0.5 --noise 0 --source none --avoidance on
+
+# 9. Strong turning
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following on --gain 1.5 --noise 0 --source none --avoidance on
+
+
+# ============================================================
+# EXPERIMENT 2 — NOISE ROBUSTNESS
+# ============================================================
+
+# ---------------- SEED 18 ----------------
+
+# 10. LiDAR noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 1.5 --noise 0.2 --source lidar --avoidance on
+
+# 11. Wheel noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 1.5 --noise 0.2 --source wheels --avoidance on
+
+# 12. Combined noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 1.5 --noise 0.2 --source both --avoidance on
+
+
+# ---------------- SEED 19 ----------------
+
+# 13. LiDAR noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following on --gain 1.5 --noise 0.2 --source lidar --avoidance on
+
+# 14. Wheel noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following on --gain 1.5 --noise 0.2 --source wheels --avoidance on
+
+# 15. Combined noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 19 --following on --gain 1.5 --noise 0.2 --source both --avoidance on
+
+
+# ---------------- SEED 20 ----------------
+
+# 16. LiDAR noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following on --gain 1.5 --noise 0.2 --source lidar --avoidance on
+
+# 17. Wheel noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following on --gain 1.5 --noise 0.2 --source wheels --avoidance on
+
+# 18. Combined noise
+ros2 launch ri_a1 launch.py & python3 src/RI_Assesment1/experiments/csv_logger.py --seed 20 --following on --gain 1.5 --noise 0.2 --source both --avoidance on

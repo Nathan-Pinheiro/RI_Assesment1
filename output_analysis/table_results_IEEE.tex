@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\caption{Experimental Performance Evaluation Across Test Configurations}
+\label{tab:experimental_results}
+\centering
+\begin{tabular}{lcccc}
+\hline
+\textbf{Configuration} & \textbf{Follow Dur. (s)} & \textbf{Ang. Error ($^\circ$)} & \textbf{Target Losses} & \textbf{Collisions} \\
+\hline
+Follow off, Gain 0.0, Noise 0.0 (none), Avoid off & 48.81 $\pm$ 24.51 & 1734.15$^\circ$ $\pm$ 542.65$^\circ$ & 363 & 11 \\
+Follow on, Gain 0.5, Noise 0.0 (none), Avoid on & 119.70 $\pm$ 9.57 & 525.97$^\circ$ $\pm$ 590.74$^\circ$ & 440 & 164 \\
+Follow on, Gain 1.5, Noise 0.0 (none), Avoid on & 123.91 $\pm$ 0.47 & 199.39$^\circ$ $\pm$ 404.14$^\circ$ & 310 & 199 \\
+Follow on, Gain 1.5, Noise 0.2 (both), Avoid on & 105.20 $\pm$ 15.26 & 761.05$^\circ$ $\pm$ 583.98$^\circ$ & 6455 & 11640 \\
+Follow on, Gain 1.5, Noise 0.2 (lidar), Avoid on & 108.45 $\pm$ 6.91 & 881.11$^\circ$ $\pm$ 579.41$^\circ$ & 4150 & 12217 \\
+Follow on, Gain 1.5, Noise 0.2 (wheels), Avoid on & 117.95 $\pm$ 7.25 & 537.13$^\circ$ $\pm$ 790.52$^\circ$ & 485 & 1101 \\
+\hline
+\end{tabular}
+\end{table}

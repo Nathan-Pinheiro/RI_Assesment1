@@ -5,6 +5,11 @@
 # Override at launch:  ros2 launch ri_a1 launch.py random_seed:=45
 seed: 22
 
+# Gaussian noise on wheel speeds (rad/s).
+noise:
+  noise: true
+  strength: 0.2
+
 # Random non-overlapping spawn area.
 spawn:
   spawn_zone_x_min: -0.7
@@ -26,6 +31,8 @@ robot:
   min_speed: 1.0         # floor while slowing (never below 0.3 * min_speed)
   turn_gain: 1.5         # wheel diff = turn_gain * turn * speed
   reverse_turn: false    # invert avoidance steering
+  following_behaviour: true      # if the robot follows other robots
+  collision_avoidance: true     # swing away from collisions or not
 
   # Free-path cruising: L = cruise_speed*(1+c), R = cruise_speed*(1-c), capped
   cruise_speed: 3.75
@@ -47,7 +54,7 @@ robot:
     - [4.0,  0]
   wheel_noise: true
   lidar_noise: true
-  strength: 0.01 # noise varians
+  strength: 0.2 # noise varians
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
 robots:

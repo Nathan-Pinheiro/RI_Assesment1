@@ -15,7 +15,7 @@ from ri_a1.config import load_config
 DEFAULTS = {
     'wheel_noise': False,
     'lidar_noise': False,
-    'strength': 0.6,
+    'strength': 0.2,
 
     'seed': 43,
     'seuil': 50,
@@ -27,6 +27,8 @@ DEFAULTS = {
     'cruise_speed': 3.75,
     'cruise_curvature': 0.5 / 7.5,
     'reverse_turn': False,
+    'following_behaviour': True,
+    'collision_avoidance': True,
     'sensor_angles_deg': [-50, -40, -30, -20, -10, 0,
                           10, 20, 30, 40, 50],
     'lookup': [
@@ -116,6 +118,7 @@ class MyRobotDriver:
     def init(self, webots_node, properties):
         self.__sensor_pub = None
         self.__cmd_sub = None
+        self.__wheel_pub = None
         self.__sensors = []
         self.__last_cmd_time = -1e9
         self.__cmd_left  = 0.0
@@ -125,8 +128,17 @@ class MyRobotDriver:
         self.__spin_warned = False
         self.__shutdown_registered = False
 
+        self.following = False
+        self.angular_error = float("nan")
+        self.target_losses = 0
+        self.previous_following = False
+        self.near_collision_count = 0
+        self.previous_near_collision = False
+
         self.__robot = webots_node.robot
         self.__name = self.__robot.getName()
+        self.gps = self.__robot.getDevice("gps")
+        self.gps.enable(32)
 
         self.__node, self.__owns_node = _acquire_ros_node(webots_node, self.__name)
 
@@ -135,6 +147,8 @@ class MyRobotDriver:
         self.wheel_noise = bool(cfg["wheel_noise"])
         self.lidar_noise = bool(cfg["lidar_noise"])
         self.noise_s = float(cfg["strength"])
+        self.following_behaviour = bool(cfg["following_behaviour"])
+        self.collision_avoidance = bool(cfg["collision_avoidance"])
 
         self.SEED              = int(cfg['seed'])
         self.SEUIL             = int(cfg['seuil'])
@@ -169,6 +183,12 @@ class MyRobotDriver:
                 self.__sensor_pub = self.__node.create_publisher(
                     Float32MultiArray,
                     f'/{self.__name}/sensor_readings', 10)
+                
+                self.__wheel_pub = self.__node.create_publisher(
+                    Float32MultiArray,
+                    f'/{self.__name}/wheel_speeds',
+                    10
+                )
                 self.__cmd_sub = self.__node.create_subscription(
                     Twist, f'/{self.__name}/cmd_vel',
                     self.__on_cmd_vel, 10)
@@ -248,11 +268,33 @@ class MyRobotDriver:
 
     def __set(self, l, r):
         if self.wheel_noise:
-            l += self.__rng.gauss(0.0, self.noise_s)
-            r += self.__rng.gauss(0.0, self.noise_s)
+            l += float(np.random.normal(0.0, self.noise_s))
+            r += float(np.random.normal(0.0, self.noise_s))
         m = self.MAX_SPEED
-        self.__left_motor.setVelocity(max(-m, min(m, l)))
-        self.__right_motor.setVelocity(max(-m, min(m, r)))
+
+        left_speed = max(-m, min(m, l))
+        right_speed = max(-m, min(m, r))
+
+        self.__left_motor.setVelocity(left_speed)
+        self.__right_motor.setVelocity(right_speed)
+
+        # Publish wheel commands for logging
+        if self.__wheel_pub is not None:
+            msg = Float32MultiArray()
+
+            msg.data = [
+                float(self.__robot.getTime()),
+                float(left_speed),
+                float(right_speed),
+                float(self.following),
+                float(self.angular_error),
+                float(self.target_losses),
+                float(self.near_collision_count),
+                self.__gps_x,
+                self.__gps_y
+            ]
+
+            self.__wheel_pub.publish(msg)
 
     def __reading_to_distance(self, v):
         if v <= 0:
@@ -274,6 +316,10 @@ class MyRobotDriver:
         if not self.__ready:
             return
 
+        position = self.gps.getValues()
+        self.__gps_x = float(position[0])
+        self.__gps_y = float(position[1])
+
         if self.__owns_node and self.__node is not None:
             try:
                 import rclpy
@@ -287,28 +333,65 @@ class MyRobotDriver:
         d = [s.getValue() for s in self.__sensors]
         max_d = max(d) if d else 0
 
+        # 1. Following state
+        self.following = max_d >= self.SEUIL
+
+        # 2. Angular error
+        if self.following:
+            nearest = d.index(max_d)
+
+            self.angular_error = abs(
+                self.SENSOR_ANGLES_DEG[nearest]
+            )
+        else:
+            self.angular_error = float("nan")
+
+        # 3. Target losses
+        if self.previous_following and not self.following:
+            self.target_losses += 1
+
+        # Store state for next timestep
+        self.previous_following = self.following
+
         if self.__sensor_pub is not None:
             msg = Float32MultiArray()
             msg.data = [float(x) for x in d]
             self.__sensor_pub.publish(msg)
 
+
+        # collision:
+        dist = self.__reading_to_distance(max_d) if max_d >= self.SEUIL else float("inf")
+        collision = dist <= self.DIST_STOP
+        if collision and not self.previous_near_collision:
+            self.near_collision_count += 1
+        self.previous_near_collision = collision
+
         if time.monotonic() - self.__last_cmd_time < self.CMD_VEL_TIMEOUT:
             self.__set(self.__cmd_left, self.__cmd_right)
             return
 
-        if max_d < self.SEUIL:
+        if not self.following_behaviour or max_d < self.SEUIL:
             self.__set(self.CRUISE_L, self.CRUISE_R)
             return
 
-        dist = self.__reading_to_distance(max_d)
-        if dist <= self.DIST_STOP:
-            self.__set(-2, 2)
-            return
-        elif dist < self.DIST_SLOW:
-            t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
-            speed = max(self.MAX_SPEED * t, self.MIN_SPEED * 0.3)
+        # Collision avoidance
+        if self.collision_avoidance:
+
+            if dist <= self.DIST_STOP:
+                self.__set(-2, 2)
+                return
+
+            elif dist < self.DIST_SLOW:
+                t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
+                speed = max(self.MAX_SPEED * t, self.MIN_SPEED * 0.3)
+
+            else:
+                speed = self.MAX_SPEED
+
         else:
+            # Collision avoidance deactivated
             speed = self.MAX_SPEED
+
 
         nearest = d.index(max_d)
         bearing = math.radians(self.SENSOR_ANGLES_DEG[nearest])
