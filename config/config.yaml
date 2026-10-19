@@ -49,8 +49,8 @@ robot:
     - [4.0,  0]
 
 # Gaussian noise on wheel speeds (rad/s), and LiDAR sesnor.
-  wheel_noise: true
-  lidar_noise: true
+  wheel_noise: false
+  lidar_noise: false
   strength: 0.2    # Standar deviation
 
 # Per-robot overrides (unlisted keys keep `robot:` defaults).
