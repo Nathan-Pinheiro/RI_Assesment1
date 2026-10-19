@@ -10,17 +10,28 @@ from std_msgs.msg import Float32MultiArray
 
 class CSVLogger(Node):
 
-    def __init__(self, seed, noise_s):
+    def __init__(self, seed, noise_s, source, gain, following, avoidance):
         super().__init__("csv_logger")
 
         self.seed = seed
         self.noise_s = noise_s
         self.start_time = self.get_clock().now().nanoseconds / 1e9
+        self.source = source
+        self.gain = gain
+        self.following_mode = following
+        self.avoidance = avoidance
 
         results_dir = Path(__file__).resolve().parent / "results"
         results_dir.mkdir(parents=True, exist_ok=True)
 
-        filename = results_dir / f"seed_{seed}_noise_{noise_s}.csv"
+        filename = results_dir / (
+                    f"seed_{seed}_"
+                    f"follow_{following}_"
+                    f"gain_{gain}_"
+                    f"noise_{noise_s}_"
+                    f"source_{source}_"
+                    f"avoid_{avoidance}.csv"
+                )
 
         self.file = open(filename, "w", newline="")
         self.writer = csv.writer(self.file)
@@ -89,11 +100,38 @@ def main():
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--noise", type=float, required=True)
 
+    parser.add_argument(
+        "--source",
+        choices=["none", "lidar", "wheels", "both"],
+        default="none"
+    )
+
+    parser.add_argument("--gain", type=float, default=1.5)
+
+    parser.add_argument(
+        "--following",
+        choices=["on", "off"],
+        default="on"
+    )
+
+    parser.add_argument(
+        "--avoidance",
+        choices=["on", "off"],
+        default="on"
+    )
+
     args = parser.parse_args()
 
     rclpy.init()
 
-    node = CSVLogger(args.seed, args.noise)
+    node = CSVLogger(
+        args.seed,
+        args.noise,
+        args.source,
+        args.gain,
+        args.following,
+        args.avoidance
+    )
 
     try:
         rclpy.spin(node)
@@ -106,7 +144,7 @@ def main():
 
         if rclpy.ok():
             rclpy.shutdown()
-
+            
 
 if __name__ == "__main__":
     main()
