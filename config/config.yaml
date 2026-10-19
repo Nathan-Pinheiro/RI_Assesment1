@@ -26,6 +26,8 @@ robot:
   min_speed: 1.0         # floor while slowing (never below 0.3 * min_speed)
   turn_gain: 1.5         # wheel diff = turn_gain * turn * speed
   reverse_turn: false    # invert avoidance steering
+  following_behaviour: true      # if the robot follows other robots
+  collision_avoidance: true     # swing away from collisions or not
 
   # Free-path cruising: L = cruise_speed*(1+c), R = cruise_speed*(1-c), capped
   cruise_speed: 3.75

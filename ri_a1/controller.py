@@ -27,6 +27,8 @@ DEFAULTS = {
     'cruise_speed': 3.75,
     'cruise_curvature': 0.5 / 7.5,
     'reverse_turn': False,
+    'following_behaviour': True,
+    'collision_avoidance': True,
     'sensor_angles_deg': [-50, -40, -30, -20, -10, 0,
                           10, 20, 30, 40, 50],
     'lookup': [
@@ -145,6 +147,8 @@ class MyRobotDriver:
         self.wheel_noise = bool(cfg["wheel_noise"])
         self.lidar_noise = bool(cfg["lidar_noise"])
         self.noise_s = float(cfg["strength"])
+        self.following_behaviour = bool(cfg["following_behaviour"])
+        self.collision_avoidance = bool(cfg["collision_avoidance"])
 
         self.SEED              = int(cfg['seed'])
         self.SEUIL             = int(cfg['seuil'])
@@ -354,32 +358,40 @@ class MyRobotDriver:
             msg.data = [float(x) for x in d]
             self.__sensor_pub.publish(msg)
 
+
+        # collision:
+        dist = self.__reading_to_distance(max_d) if max_d >= self.SEUIL else float("inf")
+        collision = dist <= self.DIST_STOP
+        if collision and not self.previous_near_collision:
+            self.near_collision_count += 1
+        self.previous_near_collision = collision
+
         if time.monotonic() - self.__last_cmd_time < self.CMD_VEL_TIMEOUT:
-            self.previous_near_collision = False
             self.__set(self.__cmd_left, self.__cmd_right)
             return
 
-        if max_d < self.SEUIL:
-            self.previous_near_collision = False
+        if not self.following_behaviour or max_d < self.SEUIL:
             self.__set(self.CRUISE_L, self.CRUISE_R)
             return
 
-        dist = self.__reading_to_distance(max_d)
+        # Collision avoidance
+        if self.collision_avoidance:
 
-        # Collision logging
-        near_collision = dist <= self.DIST_STOP
-        if near_collision and not self.previous_near_collision:
-            self.near_collision_count += 1
-        self.previous_near_collision = near_collision
+            if dist <= self.DIST_STOP:
+                self.__set(-2, 2)
+                return
 
-        if dist <= self.DIST_STOP:
-            self.__set(-2, 2)
-            return
-        elif dist < self.DIST_SLOW:
-            t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
-            speed = max(self.MAX_SPEED * t, self.MIN_SPEED * 0.3)
+            elif dist < self.DIST_SLOW:
+                t = (dist - self.DIST_STOP) / (self.DIST_SLOW - self.DIST_STOP)
+                speed = max(self.MAX_SPEED * t, self.MIN_SPEED * 0.3)
+
+            else:
+                speed = self.MAX_SPEED
+
         else:
+            # Collision avoidance deactivated
             speed = self.MAX_SPEED
+
 
         nearest = d.index(max_d)
         bearing = math.radians(self.SENSOR_ANGLES_DEG[nearest])
