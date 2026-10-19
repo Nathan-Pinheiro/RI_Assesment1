@@ -2,10 +2,12 @@
 # EXPERIMENT 1 — FOLLOWING PERFORMANCE
 # ============================================================
 
+# MANUAL CONFIGURATIOBN IN /config/config.yaml
+
 # ---------------- SEED 18 ----------------
 
 # 1. No following
-python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following off --gain 0 --noise 0 --source none --avoidance offx
+python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following off --gain 0 --noise 0 --source none --avoidance off
 
 # 2. Weak turning
 python3 src/RI_Assesment1/experiments/csv_logger.py --seed 18 --following on --gain 0.5 --noise 0 --source none --avoidance on

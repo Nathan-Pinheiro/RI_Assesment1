@@ -1,0 +1,5 @@
+Expected simulations: 18; present CSVs: 18; usable simulations: 18
+Angular error is in degrees (controller stores abs(sensor_angles_deg[nearest]) as angular_error).
+CSV collision_avoidance contains the cumulative near_collision_count. It is reported as collision_events_reported; it is not used as an activation rate.
+avoidance_enabled_pct is derived from the filename configuration (100% enabled, 0% disabled), not a measured activation duty cycle.
+Following rate and angular error use time-weighted intervals per robot; simulation summaries macro-average the five robot metrics. Target losses and reported collision counts use each robot's final cumulative counter, summed across robots.
